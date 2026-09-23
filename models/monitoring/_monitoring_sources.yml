@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: snowflake_account_usage
+    database: snowflake
+    schema: account_usage
+    description: >
+      Snowflake-maintained historical usage metadata used for warehouse
+      efficiency and query-performance monitoring.
+    tables:
+      - name: warehouse_metering_history
+        description: "Hourly warehouse credit usage from Snowflake ACCOUNT_USAGE."
+      - name: query_history
+        description: "Historical query execution metadata from Snowflake ACCOUNT_USAGE."
