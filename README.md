@@ -11,6 +11,10 @@ The project transforms raw customer, order, web event, and paid media data into 
 - ad spend reporting
 - customer history tracking with snapshots
 
+![Northwind Marketing Analytics architecture](docs/architecture.svg)
+
+> **Architecture at a glance:** Python generates reproducible sample data, Snowflake stores raw sources, dbt Cloud builds and tests the transformation layers, and Airflow is included as an optional orchestration layer for triggering the dbt Cloud production job.
+
 ## Repository Layout
 
 ```text
@@ -45,8 +49,6 @@ dbt_snowflake/
 The repository keeps the Snowflake infrastructure/setup scripts and the dbt transformation project together so the full pipeline is version-controlled in one place.
 
 ## Architecture
-
-![Northwind Marketing Analytics architecture](docs/architecture.svg)
 
 ```mermaid
 flowchart LR
