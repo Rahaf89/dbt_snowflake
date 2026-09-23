@@ -20,6 +20,9 @@ vars:
   attribution_window_days: 30
   # reprocess recent events on incremental runs to catch late arrivals
   event_lookback_days: 3
+  # Snowflake ACCOUNT_USAGE monitoring window and warehouse
+  monitoring_lookback_days: 30
+  monitored_warehouse: "TRANSFORM_WH_XS"
 
 models:
   northwind_marketing:
@@ -35,6 +38,10 @@ models:
     marts:
       +materialized: table
       +schema: marts
+
+    monitoring:
+      +materialized: view
+      +schema: monitoring
 
 snapshots:
   northwind_marketing:
