@@ -471,15 +471,22 @@ This keeps metric logic in dbt instead of redefining ROAS, CAC, conversion rate,
 
 The latest dbt Semantic Layer spec embeds semantic annotations directly on dbt models and defines simple metrics alongside the model; ratio and other advanced metrics can be defined under the top-level `metrics` key.
 
-Validation uses:
+Pre-merge validation uses:
 
 ```bash
 dbt parse
+```
+
+This validates the Semantic Layer definitions inside the branch. The `dbt sl` commands query the dbt Semantic Layer API and therefore require a semantic manifest already published by the configured deployment environment. Before the branch is merged and a production job publishes that manifest, `dbt sl validate` can correctly report an **empty semantic manifest**.
+
+After merge and a successful Production Build, configure/select the **Production** environment in the project's Semantic Layer settings and then run:
+
+```bash
 dbt sl validate
 dbt sl list metrics
 ```
 
-and metrics can be queried from the dbt Cloud CLI, for example:
+Metrics can then be queried from the dbt Cloud CLI, for example:
 
 ```bash
 dbt sl query --metrics attributed_revenue,ad_spend,roas --group-by metric_time__month,channel
