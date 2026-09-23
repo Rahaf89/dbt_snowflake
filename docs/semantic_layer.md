@@ -27,6 +27,16 @@ conversion_rate = purchases / sessions
 average_90d_ltv = average ltv_90d across customers
 ```
 
+## MetricFlow time spine
+
+The project includes `models/marts/time_spine_daily.sql` plus `_time_spine.yml`. MetricFlow requires a daily-or-finer time spine for time-based metrics and joins. The model covers recent history plus a short future window and is materialized as a table.
+
+Build it in development with:
+
+```bash
+dbt run --select time_spine_daily
+```
+
 ## Semantic models
 
 `mart_channel_performance` provides channel/month dimensions and the base metrics used by ROAS and CAC.
@@ -39,7 +49,13 @@ average_90d_ltv = average ltv_90d across customers
 
 The latest specification requires dbt Core 1.12+ or the current dbt platform/Fusion runtime.
 
-At minimum:
+First build the time spine:
+
+```bash
+dbt run --select time_spine_daily
+```
+
+Then validate the semantic definitions:
 
 ```bash
 dbt parse
