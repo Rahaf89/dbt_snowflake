@@ -5,7 +5,7 @@
 with base_dates as (
 
     {{
-        dbt.date_spine(
+        dbt_utils.date_spine(
             'day',
             "DATE('2020-01-01')",
             "DATE('2030-01-01')"
