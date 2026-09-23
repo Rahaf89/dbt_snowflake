@@ -286,6 +286,20 @@ This keeps dbt Cloud responsible for transformation logic, source freshness, tes
 
 Airflow uses the official dbt Cloud provider's `DbtCloudRunJobOperator` to trigger the existing project/environment/job by name, and the Snowflake provider for SQL validation tasks.
 
+## Authentication
+
+Snowflake and dbt Cloud use **RSA key-pair authentication** in this project rather than storing the Snowflake password in dbt Cloud.
+
+The setup is documented step-by-step in [`snowflake/README.md`](snowflake/README.md), including:
+
+- generating the RSA private/public key pair with OpenSSL on Windows
+- encrypting the private key for dbt Cloud
+- choosing and storing the private-key passphrase
+- registering the public key on the Snowflake user
+- configuring the dbt Cloud Key pair authentication fields
+
+No private keys or passphrases are committed to this repository.
+
 ## Snowflake Security
 
 dbt runs with a dedicated transformation role rather than `ACCOUNTADMIN`.
