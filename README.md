@@ -442,9 +442,9 @@ Full implementation and validation steps are documented in [`docs/anomaly_detect
 
 ## dbt Semantic Layer
 
-The project defines centrally governed business metrics with the dbt Semantic Layer / MetricFlow using dbt's latest YAML specification. A daily `time_spine_daily` model is included because MetricFlow requires a daily-or-finer time spine for time-based metric aggregation. The channel/month and channel/day marts also expose explicit surrogate-key primary entities so their semantic grain is unambiguous.
+The project defines centrally governed business metrics with the dbt Semantic Layer / MetricFlow. The semantic definitions live in version control alongside the marts, while dbt Cloud's Semantic Layer service is configured to use the **Production** deployment environment.
 
-The semantic models live alongside the marts they describe, while the business-facing metrics include:
+Business-facing metrics include:
 
 ```text
 ad_spend
@@ -458,7 +458,7 @@ conversion_rate
 average_90d_ltv
 ```
 
-The key derived business definitions are:
+Key definitions:
 
 ```text
 ROAS            = attributed_revenue / ad_spend
@@ -467,36 +467,80 @@ conversion_rate = purchases / sessions
 average_90d_ltv = average customer revenue in the first 90 days
 ```
 
-This keeps metric logic in dbt instead of redefining ROAS, CAC, conversion rate, and LTV independently in each dashboard or BI tool.
+The project also includes:
 
-The latest dbt Semantic Layer spec embeds semantic annotations directly on dbt models and defines simple metrics alongside the model; ratio and other advanced metrics can be defined under the top-level `metrics` key.
+```text
+models/marts/time_spine_daily.sql
+models/marts/_time_spine.yml
+```
 
-Pre-merge validation uses:
+because MetricFlow requires a daily-or-finer time spine for time-based metrics. The channel/month and channel/day semantic models use explicit surrogate-key primary entities (`channel_month_key` and `channel_day_key`) so their grain is unambiguous.
+
+### Semantic Layer setup in dbt Cloud
+
+After the semantic models are merged and the normal **Production Build** succeeds:
+
+```text
+Account settings
+    ↓
+Projects
+    ↓
+NORTHWIND ANALYTICS
+    ↓
+Semantic Layer
+    ↓
+select deployment environment = Production
+```
+
+Then create a Semantic Layer Snowflake credential under **Credentials & tokens**.
+
+For this project the credential uses:
+
+```text
+Username:   RAHAF
+Role:       TRANSFORMER
+Warehouse:  TRANSFORM_WH_XS
+Auth:       Snowflake key-pair authentication
+```
+
+The Semantic Layer credential uses an encrypted RSA private key and its passphrase. A dedicated public key can be registered on the Snowflake user as `RSA_PUBLIC_KEY_2` so the existing dbt Cloud production key does not need to be replaced.
+
+The service token is mapped with:
+
+```text
+Semantic Layer Only
+Metadata Only
+Environment write access: None
+```
+
+No private key, passphrase, or service-token value is committed to GitHub.
+
+### Validation flow used in this project
+
+Before merge:
 
 ```bash
+dbt run --select time_spine_daily
 dbt parse
 ```
 
-This validates the Semantic Layer definitions inside the branch. The `dbt sl` commands query the dbt Semantic Layer API and therefore require a semantic manifest already published by the configured deployment environment. Before the branch is merged and a production job publishes that manifest, `dbt sl validate` can correctly report an **empty semantic manifest**.
-
-After merge and a successful Production Build, configure/select the **Production** environment in the project's Semantic Layer settings and then run:
+After merge and a successful Production Build:
 
 ```bash
 dbt sl validate
 dbt sl list metrics
-```
-
-This project has been validated successfully against the dbt Semantic Layer API: `dbt sl validate` passes, the metric catalog is returned by `dbt sl list metrics`, and Semantic Layer metric queries execute successfully from dbt Cloud Studio.
-
-Metrics can then be queried from the dbt Cloud CLI, for example:
-
-```bash
 dbt sl query --metrics attributed_revenue,ad_spend,roas --group-by metric_time__month,channel
 ```
 
-`dbt parse` refreshes the Semantic Layer artifacts, and dbt Cloud Studio / dbt CLI can use `dbt sl` commands to validate, list, and query metrics.
+If `dbt sl validate` returns **Empty semantic manifest**, the Semantic Layer service has not yet been configured against a deployment environment containing the semantic manifest. Select **Production**, configure the Snowflake credential/service token, rerun the Production Build, and validate again.
 
-Full setup and validation instructions are in [`docs/semantic_layer.md`](docs/semantic_layer.md).
+If validation reports missing physical columns such as `PERFORMANCE_MONTH`, `FUNNEL_DATE`, `CHANNEL_MONTH_KEY`, or `CHANNEL_DAY_KEY`, verify the production marts in Snowflake and rerun the Production Build so the published manifest and warehouse relations are aligned.
+
+The dbt Cloud Studio **Defer to: DEV** selector is a development-state setting and does not need to be changed to Production for the Semantic Layer. Production selection is done in the Semantic Layer configuration itself.
+
+This project has now been validated successfully end to end: `dbt sl validate` passes, `dbt sl list metrics` returns the metric catalog, and Semantic Layer metric queries execute successfully against Snowflake.
+
+Full setup, key-pair instructions, service-token setup, troubleshooting, and validation are documented in [`docs/semantic_layer.md`](docs/semantic_layer.md).
 
 ## Marketing Attribution
 
