@@ -1,0 +1,14 @@
+northwind_marketing:
+  target: ci
+  outputs:
+    ci:
+      type: snowflake
+      account: dummy_account
+      user: dummy_user
+      password: dummy_password
+      role: TRANSFORMER
+      database: NORTHWIND
+      warehouse: TRANSFORM_WH_XS
+      schema: CI
+      threads: 4
+      client_session_keep_alive: false
