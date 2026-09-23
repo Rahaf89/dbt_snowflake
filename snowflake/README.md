@@ -8,7 +8,8 @@ This folder contains the Snowflake side of the Northwind Marketing Analytics pro
 2. Run `02_raw_tables.sql`.
 3. Load the five synthetic CSV files into `NORTHWIND.RAW`.
 4. Configure key-pair authentication using `03_key_pair_template.sql`.
-5. Configure dbt Cloud to use:
+5. Run `04_monitoring_grants.sql` as `ACCOUNTADMIN` so the dbt role can read Snowflake usage metadata.
+6. Configure dbt Cloud to use:
    - Database: `NORTHWIND`
    - Warehouse: `TRANSFORM_WH_XS`
    - Role: `TRANSFORMER`
@@ -232,6 +233,42 @@ dbt Cloud tokens
 
 These are excluded from the repository through `.gitignore`.
 
+## Account Usage access for cost monitoring
+
+The dbt monitoring models read from Snowflake's shared `SNOWFLAKE.ACCOUNT_USAGE` schema.
+
+Run once as `ACCOUNTADMIN`:
+
+```sql
+USE ROLE ACCOUNTADMIN;
+GRANT DATABASE ROLE SNOWFLAKE.USAGE_VIEWER TO ROLE TRANSFORMER;
+```
+
+This statement is included in `04_monitoring_grants.sql`.
+
+The grant lets the `TRANSFORMER` role read historical usage views such as:
+
+```text
+SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
+SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+```
+
+It is intentionally read-only and does not grant warehouse administration privileges.
+
+After applying the grant, validate the monitoring layer from dbt Cloud:
+
+```bash
+dbt build --select monitoring
+```
+
+In production, the models are created in:
+
+```text
+NORTHWIND.PROD_MONITORING
+```
+
+Note that Snowflake Account Usage data is delayed rather than real time. Query history can lag by tens of minutes, and warehouse metering data can lag by several hours.
+
 ## Production schemas
 
 dbt creates these from the production base schema and the layer-specific schema configuration in `dbt_project.yml`:
@@ -242,6 +279,7 @@ NORTHWIND
 ├── PROD_STAGING
 ├── PROD_INTERMEDIATE
 ├── PROD_MARTS
+├── PROD_MONITORING
 └── SNAPSHOTS
 ```
 
