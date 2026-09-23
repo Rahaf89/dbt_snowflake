@@ -467,7 +467,7 @@ average_90d_ltv = average customer revenue in the first 90 days
 
 This keeps metric logic in dbt instead of redefining ROAS, CAC, conversion rate, and LTV independently in each dashboard or BI tool.
 
-The latest dbt Semantic Layer spec embeds semantic annotations directly on dbt models and defines simple metrics alongside the model; ratio and other advanced metrics can be defined under the top-level `metrics` key. citeturn409871view0turn409871view3
+The latest dbt Semantic Layer spec embeds semantic annotations directly on dbt models and defines simple metrics alongside the model; ratio and other advanced metrics can be defined under the top-level `metrics` key.
 
 Validation uses:
 
@@ -483,7 +483,7 @@ and metrics can be queried from the dbt Cloud CLI, for example:
 dbt sl query --metrics attributed_revenue,ad_spend,roas --group-by metric_time__month,channel
 ```
 
-dbt documents `dbt parse` as the minimum step needed to refresh Semantic Layer artifacts and supports `dbt sl` commands in Studio/CLI for listing and querying metrics. citeturn702454view0
+`dbt parse` refreshes the Semantic Layer artifacts, and dbt Cloud Studio / dbt CLI can use `dbt sl` commands to validate, list, and query metrics.
 
 Full setup and validation instructions are in [`docs/semantic_layer.md`](docs/semantic_layer.md).
 
