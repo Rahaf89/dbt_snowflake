@@ -182,6 +182,38 @@ Models:
 - `MART_CUSTOMER_LTV`
 - `MART_FUNNEL`
 
+## Incremental Event Processing
+
+`STG_WEB_EVENTS` is materialized as an **incremental Snowflake table** because event data is the natural high-volume source in this project.
+
+The model uses:
+
+```text
+materialization: incremental
+strategy:        merge
+unique key:      event_id
+lookback window: 3 days
+```
+
+On the first run, dbt builds the complete table. On later runs, it only rereads recent rows from `NORTHWIND.RAW.WEB_EVENTS` and merges them into the existing staging table.
+
+The lookback window is configurable in `dbt_project.yml`:
+
+```yaml
+vars:
+  event_lookback_days: 3
+```
+
+Why use a lookback instead of only loading events newer than the current maximum timestamp? Real event pipelines can receive **late-arriving data**. Reprocessing the most recent few days allows those late records to be captured, while `event_id` prevents duplicates.
+
+To deliberately rebuild the incremental model from scratch:
+
+```bash
+dbt build --select stg_web_events+ --full-refresh
+```
+
+This pattern reduces the amount of source data scanned as the event table grows while keeping the logic safe for late arrivals.
+
 ## Marketing Attribution
 
 The attribution model is configurable through dbt variables:
@@ -446,7 +478,6 @@ Snowflake PROD_* schemas
 
 - add CI jobs for pull requests
 - deploy the included Airflow DAG in a managed Airflow environment
-- add incremental models for large event tables
 - expose marts to Looker or another BI tool
 - add anomaly detection for spend and conversion metrics
 - create dbt Semantic Layer metrics
