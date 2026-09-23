@@ -678,10 +678,22 @@ Snowflake PROD_* schemas
 - Incremental event processing with late-arrival lookback
 - Snowflake warehouse credit and query-performance monitoring
 
+## Implemented Enhancements
+
+The following improvements were originally planned as future work and are now implemented in the repository:
+
+- **GitHub Actions CI for pull requests** — validates Python syntax, YAML, dbt dependencies, dbt parsing, and required repository structure before merge.
+- **Incremental processing for web events** — `STG_WEB_EVENTS` uses Snowflake incremental `merge` logic with `event_id` as the unique key and a 3-day late-arrival lookback window.
+- **Snowflake warehouse cost and query monitoring** — monitoring models track warehouse credit usage, estimated idle compute, long-running queries, scan volume, and cache usage.
+- **Apache Airflow orchestration DAG** — the repository includes a provider-based DAG that validates RAW data, triggers the dbt Cloud production job, and validates final marts. It is included as an optional orchestration layer and is not currently deployed as the production scheduler.
+- **Production CI/CD workflow documentation** — the README documents how GitHub Actions CI, pull requests, dbt Cloud, and Snowflake work together from development through production deployment.
+
 ## Future Improvements
 
-- run the included Airflow DAG in a local or self-hosted Apache Airflow environment
-- expose marts to Looker or another BI tool
-- add anomaly detection for spend and conversion metrics
-- create dbt Semantic Layer metrics
-- add alerting for failed production runs or freshness failures
+The next realistic extensions are:
+
+- **Run the included Airflow DAG in a local or self-hosted Apache Airflow environment** and, if it becomes the production scheduler, disable the dbt Cloud schedule to avoid duplicate runs.
+- **Expose analytics marts to Looker or another BI tool** and build portfolio dashboards for channel performance, attribution, funnel analysis, and customer LTV.
+- **Add anomaly detection for spend and conversion metrics** to identify unusual daily changes in advertising spend, conversion rate, and attributed revenue.
+- **Create dbt Semantic Layer metrics** so business metrics such as revenue, ROAS, conversion rate, CAC, and LTV are centrally defined.
+- **Add alerting for failed production runs or source freshness failures** through dbt Cloud or Airflow notifications.
