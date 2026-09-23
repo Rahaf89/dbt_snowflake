@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" role="img" aria-labelledby="title desc">
+  <title id="title">Northwind Marketing Analytics architecture</title>
+  <desc id="desc">Airflow orchestrates a dbt Cloud production job that transforms Snowflake raw data through staging, intermediate, marts and snapshots.</desc>
+  <defs>
+    <style>
+      .bg { fill:#0f172a; }
+      .box { fill:#172033; stroke:#64748b; stroke-width:2; rx:18; }
+      .accent { fill:#1e293b; stroke:#38bdf8; stroke-width:3; rx:18; }
+      .title { font:700 28px Arial, sans-serif; fill:#f8fafc; }
+      .label { font:700 20px Arial, sans-serif; fill:#f8fafc; }
+      .small { font:400 15px Arial, sans-serif; fill:#cbd5e1; }
+      .arrow { stroke:#94a3b8; stroke-width:4; fill:none; marker-end:url(#arrow); }
+      .dash { stroke:#f59e0b; stroke-width:3; stroke-dasharray:9 8; fill:none; marker-end:url(#arrowOrange); }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1400" height="560"/>
+  <text class="title" x="48" y="54">Northwind Marketing Analytics — Production Architecture</text>
+
+  <rect class="box" x="45" y="120" width="190" height="115"/>
+  <text class="label" x="140" y="160" text-anchor="middle">Python / CSV</text>
+  <text class="small" x="140" y="190" text-anchor="middle">Synthetic source data</text>
+  <text class="small" x="140" y="214" text-anchor="middle">ingestion/</text>
+
+  <rect class="accent" x="300" y="120" width="190" height="115"/>
+  <text class="label" x="395" y="160" text-anchor="middle">Snowflake RAW</text>
+  <text class="small" x="395" y="190" text-anchor="middle">5 source tables</text>
+  <text class="small" x="395" y="214" text-anchor="middle">NORTHWIND.RAW</text>
+
+  <rect class="box" x="555" y="120" width="205" height="115"/>
+  <text class="label" x="657" y="160" text-anchor="middle">dbt Cloud</text>
+  <text class="small" x="657" y="190" text-anchor="middle">Production Build</text>
+  <text class="small" x="657" y="214" text-anchor="middle">freshness + tests + docs</text>
+
+  <rect class="box" x="825" y="90" width="210" height="95"/>
+  <text class="label" x="930" y="128" text-anchor="middle">PROD_STAGING</text>
+  <text class="small" x="930" y="156" text-anchor="middle">clean views</text>
+
+  <rect class="box" x="825" y="215" width="210" height="95"/>
+  <text class="label" x="930" y="253" text-anchor="middle">PROD_INTERMEDIATE</text>
+  <text class="small" x="930" y="281" text-anchor="middle">business logic</text>
+
+  <rect class="accent" x="1100" y="215" width="235" height="95"/>
+  <text class="label" x="1217" y="253" text-anchor="middle">PROD_MARTS</text>
+  <text class="small" x="1217" y="281" text-anchor="middle">analytics-ready tables</text>
+
+  <rect class="box" x="1100" y="90" width="235" height="95"/>
+  <text class="label" x="1217" y="128" text-anchor="middle">SNAPSHOTS</text>
+  <text class="small" x="1217" y="156" text-anchor="middle">SCD customer history</text>
+
+  <rect class="box" x="555" y="380" width="205" height="105"/>
+  <text class="label" x="657" y="418" text-anchor="middle">Apache Airflow</text>
+  <text class="small" x="657" y="447" text-anchor="middle">Python DAG</text>
+  <text class="small" x="657" y="470" text-anchor="middle">optional scheduler/orchestrator</text>
+
+  <rect class="box" x="825" y="380" width="210" height="105"/>
+  <text class="label" x="930" y="418" text-anchor="middle">GitHub</text>
+  <text class="small" x="930" y="447" text-anchor="middle">version control</text>
+  <text class="small" x="930" y="470" text-anchor="middle">PR → main → deploy</text>
+
+  <path class="arrow" d="M235 177 L300 177"/>
+  <path class="arrow" d="M490 177 L555 177"/>
+  <path class="arrow" d="M760 160 L825 137"/>
+  <path class="arrow" d="M930 185 L930 215"/>
+  <path class="arrow" d="M1035 262 L1100 262"/>
+  <path class="arrow" d="M1035 137 L1100 137"/>
+  <path class="dash" d="M657 380 L657 235"/>
+  <path class="dash" d="M930 380 L715 235"/>
+
+  <text class="small" x="500" y="525">Airflow can own the schedule and trigger the existing dbt Cloud job; disable the dbt Cloud schedule if Airflow is enabled.</text>
+</svg>
