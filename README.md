@@ -442,7 +442,7 @@ Full implementation and validation steps are documented in [`docs/anomaly_detect
 
 ## dbt Semantic Layer
 
-The project defines centrally governed business metrics with the dbt Semantic Layer / MetricFlow using dbt's latest YAML specification. A daily `time_spine_daily` model is included because MetricFlow requires a daily-or-finer time spine for time-based metric aggregation.
+The project defines centrally governed business metrics with the dbt Semantic Layer / MetricFlow using dbt's latest YAML specification. A daily `time_spine_daily` model is included because MetricFlow requires a daily-or-finer time spine for time-based metric aggregation. The channel/month and channel/day marts also expose explicit surrogate-key primary entities so their semantic grain is unambiguous.
 
 The semantic models live alongside the marts they describe, while the business-facing metrics include:
 
