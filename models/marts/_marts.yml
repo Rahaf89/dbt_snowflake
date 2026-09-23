@@ -12,18 +12,137 @@ models:
 
   - name: mart_channel_performance
     description: "Grain: one row per channel, per month. Powers the Executive Summary dashboard page."
+    semantic_model:
+      enabled: true
+    agg_time_dimension: performance_month
     columns:
+      - name: channel_month_key
+        entity:
+          name: channel_month
+          type: primary
+        tests: [unique, not_null]
+      - name: performance_month
+        granularity: month
+        dimension:
+          type: time
       - name: channel
+        dimension:
+          type: categorical
         tests: [not_null]
+      - name: total_spend
+      - name: total_attributed_revenue
+      - name: attributed_orders
+      - name: new_customers
+    metrics:
+      - name: ad_spend
+        label: Ad Spend
+        description: "Total paid media spend in USD."
+        type: simple
+        agg: sum
+        expr: total_spend
+      - name: attributed_revenue
+        label: Attributed Revenue
+        description: "Revenue attributed to marketing channels under the selected attribution model."
+        type: simple
+        agg: sum
+        expr: total_attributed_revenue
+      - name: new_customers
+        label: New Customers
+        description: "New customers acquired in the selected period."
+        type: simple
+        agg: sum
+        expr: new_customers
 
   - name: mart_funnel
     description: "Grain: one row per channel, per day. Powers the Funnel dashboard page."
+    semantic_model:
+      enabled: true
+    agg_time_dimension: funnel_date
+    columns:
+      - name: channel_day_key
+        entity:
+          name: channel_day
+          type: primary
+        tests: [unique, not_null]
+      - name: funnel_date
+        granularity: day
+        dimension:
+          type: time
+      - name: channel
+        dimension:
+          type: categorical
+      - name: sessions
+      - name: add_to_carts
+      - name: purchases
+    metrics:
+      - name: sessions
+        label: Sessions
+        description: "Count of page-view sessions in the funnel mart."
+        type: simple
+        agg: sum
+        expr: sessions
+      - name: purchases
+        label: Purchases
+        description: "Count of purchase sessions in the funnel mart."
+        type: simple
+        agg: sum
+        expr: purchases
 
   - name: mart_customer_ltv
     description: "Grain: one row per customer. Powers the Customer LTV & Cohorts dashboard page."
+    semantic_model:
+      enabled: true
+    agg_time_dimension: first_order_at
     columns:
       - name: customer_id
+        entity:
+          name: customer
+          type: primary
         tests: [unique, not_null]
+      - name: acquisition_channel
+        dimension:
+          type: categorical
+      - name: cohort_month
+        granularity: month
+        dimension:
+          type: time
+      - name: first_order_at
+        granularity: day
+        dimension:
+          type: time
+      - name: ltv_90d
+      - name: ltv_still_accumulating
+        dimension:
+          type: categorical
+    metrics:
+      - name: average_90d_ltv
+        label: Average 90-Day LTV
+        description: "Average customer revenue during the first 90 days after first order."
+        type: simple
+        agg: average
+        expr: ltv_90d
+
+metrics:
+  - name: roas
+    label: ROAS
+    description: "Attributed revenue divided by paid media spend."
+    type: ratio
+    numerator: attributed_revenue
+    denominator: ad_spend
+
+  - name: cac
+    label: Customer Acquisition Cost
+    description: "Paid media spend divided by newly acquired customers."
+    type: ratio
+    numerator: ad_spend
+    denominator: new_customers
+
+  - name: conversion_rate
+    label: Conversion Rate
+    description: "Purchases divided by sessions. Returned as a decimal ratio."
+    type: ratio
+    numerator: purchases
+    denominator: sessions
 
 exposures:
   - name: northwind_marketing_dashboard

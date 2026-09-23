@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: time_spine_daily
+    description: >
+      Daily MetricFlow time spine used by the dbt Semantic Layer for
+      time-based joins and metric aggregation.
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        description: "Base daily date used by MetricFlow."
+        granularity: day
+        tests: [unique, not_null]

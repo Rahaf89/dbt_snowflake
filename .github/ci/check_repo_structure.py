@@ -21,6 +21,13 @@ REQUIRED_PATHS = [
     "models/marts/mart_channel_performance.sql",
     "models/marts/mart_customer_ltv.sql",
     "models/marts/mart_funnel.sql",
+    "models/marts/time_spine_daily.sql",
+    "models/marts/_time_spine.yml",
+    "models/monitoring/mon_marketing_daily_metrics.sql",
+    "models/monitoring/mon_marketing_anomalies.sql",
+    "tests/warn_on_marketing_anomalies.sql",
+    "docs/anomaly_detection.md",
+    "docs/semantic_layer.md",
     "snapshots/scd_customers.sql",
     "tests/assert_spend_reconciles_to_source.sql",
 ]

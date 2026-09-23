@@ -37,7 +37,9 @@ dbt_snowflake/
 │   └── README.md
 ├── docs/
 │   ├── architecture.svg
-│   └── alerting.md
+│   ├── alerting.md
+│   ├── anomaly_detection.md
+│   └── semantic_layer.md
 ├── models/
 │   ├── staging/
 │   ├── intermediate/
@@ -142,6 +144,8 @@ models/
 │   └── int_customer_touchpoints.sql
 ├── marts/
 │   ├── _marts.yml
+    ├── _time_spine.yml
+    ├── time_spine_daily.sql
     ├── fct_ad_spend.sql
     ├── mart_channel_performance.sql
     ├── mart_customer_ltv.sql
@@ -150,7 +154,9 @@ models/
     ├── _monitoring_sources.yml
     ├── _monitoring.yml
     ├── mon_warehouse_daily_usage.sql
-    └── mon_query_performance.sql
+    ├── mon_query_performance.sql
+    ├── mon_marketing_daily_metrics.sql
+    └── mon_marketing_anomalies.sql
 
 snapshots/
 └── scd_customers.sql
@@ -392,6 +398,103 @@ Check that query IDs are populated, elapsed time and bytes scanned are non-negat
 An empty or incomplete recent window does not automatically mean the models are broken. `SNOWFLAKE.ACCOUNT_USAGE` is delayed, so newly executed queries and recent warehouse consumption can appear later.
 
 This validation path was used for the project: development build → PR CI → merge to `main` → production build → Snowflake schema/view checks → monitoring data checks.
+
+## Marketing Anomaly Detection
+
+The monitoring layer includes rolling anomaly detection for the three operational marketing signals most likely to need investigation:
+
+- daily paid-media spend
+- daily attributed revenue
+- daily conversion rate
+
+The pipeline is:
+
+```text
+FCT_AD_SPEND + INT_ATTRIBUTED_REVENUE + MART_FUNNEL
+                         ↓
+            MON_MARKETING_DAILY_METRICS
+                         ↓
+       28-period rolling baseline per channel
+                         ↓
+          rolling mean + standard deviation
+                         ↓
+                    z-score
+                         ↓
+             MON_MARKETING_ANOMALIES
+```
+
+The defaults are configurable in `dbt_project.yml`:
+
+```yaml
+vars:
+  anomaly_lookback_periods: 28
+  anomaly_min_history_periods: 7
+  anomaly_zscore_threshold: 3.0
+```
+
+The rolling baseline excludes the current observation, so today's value is compared with prior history rather than influencing its own baseline. A metric is only evaluated after the configured minimum amount of history exists and its historical standard deviation is greater than zero.
+
+The model produces individual flags for spend, attributed revenue, and conversion rate plus a combined `is_any_anomaly` flag.
+
+A warning-level dbt test, `warn_on_marketing_anomalies.sql`, surfaces detected anomalies during `dbt build` without failing the production pipeline. This is useful for a portfolio/demo dataset where unusual synthetic values should be investigated but should not automatically block every deployment.
+
+Full implementation and validation steps are documented in [`docs/anomaly_detection.md`](docs/anomaly_detection.md).
+
+## dbt Semantic Layer
+
+The project defines centrally governed business metrics with the dbt Semantic Layer / MetricFlow using dbt's latest YAML specification. A daily `time_spine_daily` model is included because MetricFlow requires a daily-or-finer time spine for time-based metric aggregation. The channel/month and channel/day marts also expose explicit surrogate-key primary entities so their semantic grain is unambiguous.
+
+The semantic models live alongside the marts they describe, while the business-facing metrics include:
+
+```text
+ad_spend
+attributed_revenue
+roas
+new_customers
+cac
+sessions
+purchases
+conversion_rate
+average_90d_ltv
+```
+
+The key derived business definitions are:
+
+```text
+ROAS            = attributed_revenue / ad_spend
+CAC             = ad_spend / new_customers
+conversion_rate = purchases / sessions
+average_90d_ltv = average customer revenue in the first 90 days
+```
+
+This keeps metric logic in dbt instead of redefining ROAS, CAC, conversion rate, and LTV independently in each dashboard or BI tool.
+
+The latest dbt Semantic Layer spec embeds semantic annotations directly on dbt models and defines simple metrics alongside the model; ratio and other advanced metrics can be defined under the top-level `metrics` key.
+
+Pre-merge validation uses:
+
+```bash
+dbt parse
+```
+
+This validates the Semantic Layer definitions inside the branch. The `dbt sl` commands query the dbt Semantic Layer API and therefore require a semantic manifest already published by the configured deployment environment. Before the branch is merged and a production job publishes that manifest, `dbt sl validate` can correctly report an **empty semantic manifest**.
+
+After merge and a successful Production Build, configure/select the **Production** environment in the project's Semantic Layer settings and then run:
+
+```bash
+dbt sl validate
+dbt sl list metrics
+```
+
+Metrics can then be queried from the dbt Cloud CLI, for example:
+
+```bash
+dbt sl query --metrics attributed_revenue,ad_spend,roas --group-by metric_time__month,channel
+```
+
+`dbt parse` refreshes the Semantic Layer artifacts, and dbt Cloud Studio / dbt CLI can use `dbt sl` commands to validate, list, and query metrics.
+
+Full setup and validation instructions are in [`docs/semantic_layer.md`](docs/semantic_layer.md).
 
 ## Marketing Attribution
 
@@ -822,6 +925,8 @@ The following improvements were originally planned as future work and are now im
 - **Apache Airflow orchestration DAG** — the repository includes a provider-based DAG that validates RAW data, triggers the dbt Cloud production job, and validates final marts. It is included as an optional orchestration layer and is not currently deployed as the production scheduler.
 - **Production CI/CD workflow documentation** — the README documents how GitHub Actions CI, pull requests, dbt Cloud, and Snowflake work together from development through production deployment.
 - **Production failure and freshness alerting workflow** — the repository includes dbt Cloud alerting guidance plus a guarded `simulate_alert_failure` macro for safely testing failed-run notifications without modifying Snowflake data. The failure path is implemented; external email delivery is being validated in dbt Cloud.
+- **Marketing anomaly detection** — rolling channel-level z-score monitoring flags unusual daily spend, attributed revenue, and conversion-rate movements, with warning-level dbt tests.
+- **dbt Semantic Layer metrics** — centrally defines attributed revenue, ad spend, ROAS, CAC, conversion rate, and 90-day LTV so downstream tools reuse the same business logic.
 
 ## Future Improvements
 
@@ -829,5 +934,3 @@ The next realistic extensions are:
 
 - **Run the included Airflow DAG in a local or self-hosted Apache Airflow environment** and, if it becomes the production scheduler, disable the dbt Cloud schedule to avoid duplicate runs.
 - **Expose analytics marts to Looker or another BI tool** and build portfolio dashboards for channel performance, attribution, funnel analysis, and customer LTV.
-- **Add anomaly detection for spend and conversion metrics** to identify unusual daily changes in advertising spend, conversion rate, and attributed revenue.
-- **Create dbt Semantic Layer metrics** so business metrics such as revenue, ROAS, conversion rate, CAC, and LTV are centrally defined.
