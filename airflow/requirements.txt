@@ -1,0 +1,3 @@
+# Install these on top of an existing Apache Airflow environment.
+apache-airflow-providers-dbt-cloud
+apache-airflow-providers-snowflake
