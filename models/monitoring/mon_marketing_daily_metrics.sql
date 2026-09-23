@@ -26,7 +26,7 @@ revenue as (
 funnel as (
 
     select
-        cast(day as date) as metric_date,
+        cast(funnel_date as date) as metric_date,
         channel,
         sum(sessions) as sessions,
         sum(purchases) as purchases
