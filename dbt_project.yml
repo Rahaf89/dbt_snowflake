@@ -18,6 +18,8 @@ vars:
   # switch attribution model without touching SQL: first_touch | last_touch | linear
   attribution_model: "linear"
   attribution_window_days: 30
+  # reprocess recent events on incremental runs to catch late arrivals
+  event_lookback_days: 3
 
 models:
   northwind_marketing:
