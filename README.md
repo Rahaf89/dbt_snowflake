@@ -144,6 +144,8 @@ models/
 │   └── int_customer_touchpoints.sql
 ├── marts/
 │   ├── _marts.yml
+    ├── _time_spine.yml
+    ├── time_spine_daily.sql
     ├── fct_ad_spend.sql
     ├── mart_channel_performance.sql
     ├── mart_customer_ltv.sql
@@ -440,7 +442,7 @@ Full implementation and validation steps are documented in [`docs/anomaly_detect
 
 ## dbt Semantic Layer
 
-The project defines centrally governed business metrics with the dbt Semantic Layer / MetricFlow using dbt's latest YAML specification.
+The project defines centrally governed business metrics with the dbt Semantic Layer / MetricFlow using dbt's latest YAML specification. A daily `time_spine_daily` model is included because MetricFlow requires a daily-or-finer time spine for time-based metric aggregation.
 
 The semantic models live alongside the marts they describe, while the business-facing metrics include:
 
