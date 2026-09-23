@@ -821,6 +821,7 @@ The following improvements were originally planned as future work and are now im
 - **Snowflake warehouse cost and query monitoring** — monitoring models track warehouse credit usage, estimated idle compute, long-running queries, scan volume, and cache usage.
 - **Apache Airflow orchestration DAG** — the repository includes a provider-based DAG that validates RAW data, triggers the dbt Cloud production job, and validates final marts. It is included as an optional orchestration layer and is not currently deployed as the production scheduler.
 - **Production CI/CD workflow documentation** — the README documents how GitHub Actions CI, pull requests, dbt Cloud, and Snowflake work together from development through production deployment.
+- **Production failure and freshness alerting workflow** — the repository includes dbt Cloud alerting guidance plus a guarded `simulate_alert_failure` macro for safely testing failed-run notifications without modifying Snowflake data. The failure path is implemented; external email delivery is being validated in dbt Cloud.
 
 ## Future Improvements
 
@@ -830,4 +831,3 @@ The next realistic extensions are:
 - **Expose analytics marts to Looker or another BI tool** and build portfolio dashboards for channel performance, attribution, funnel analysis, and customer LTV.
 - **Add anomaly detection for spend and conversion metrics** to identify unusual daily changes in advertising spend, conversion rate, and attributed revenue.
 - **Create dbt Semantic Layer metrics** so business metrics such as revenue, ROAS, conversion rate, CAC, and LTV are centrally defined.
-- **Finish dbt Cloud alert delivery setup** by selecting the email or Slack recipient for the Production Build and validating it with the safe temporary alert-test job.
