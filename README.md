@@ -1,5 +1,7 @@
 # Northwind Marketing Analytics with dbt + Snowflake + Airflow
 
+[![CI](https://github.com/Rahaf89/dbt_snowflake/actions/workflows/ci.yml/badge.svg)](https://github.com/Rahaf89/dbt_snowflake/actions/workflows/ci.yml)
+
 A production-style analytics engineering project built with **Snowflake**, **dbt Cloud**, **Python**, and an optional **Apache Airflow** orchestration layer.
 
 The project transforms raw customer, order, web event, and paid media data into tested analytical models for:
@@ -380,6 +382,29 @@ This project supports questions such as:
 3. Where do customers drop out of the marketing funnel?
 4. What is 90-day customer lifetime value by acquisition channel and cohort?
 5. How do first-touch, last-touch, and linear attribution change channel performance?
+
+## Continuous Integration
+
+Pull requests to `main` and pushes to `main` run the GitHub Actions workflow in:
+
+```text
+.github/workflows/ci.yml
+```
+
+The CI job checks the repository before changes are merged:
+
+1. checks out the repository
+2. installs Python 3.12
+3. installs dbt Core, the Snowflake adapter, and PyYAML
+4. compiles the Python ingestion and Airflow DAG files to catch syntax errors
+5. parses every YAML file to catch invalid configuration
+6. runs `dbt deps`
+7. runs `dbt parse` with a safe dummy CI profile, so dbt/Jinja/ref/source errors are caught without connecting to Snowflake
+8. verifies that the core project files are still present
+
+The CI profile is intentionally stored under `.github/ci/profiles.yml` and contains only dummy connection values. No production Snowflake credentials are required for these checks.
+
+A failed check gives the pull request a red status; a successful check gives it a green status. This is the first safety gate before code is merged and later deployed by the dbt Cloud production job.
 
 ## Development Workflow
 
