@@ -60,18 +60,39 @@ First build the time spine:
 dbt run --select time_spine_daily
 ```
 
-Then validate the semantic definitions:
+Then validate the semantic definitions locally in the project:
 
 ```bash
 dbt parse
 ```
 
-In dbt Cloud Studio / dbt CLI, also run:
+A successful `dbt parse` is the **pre-merge validation** for the Semantic Layer configuration. It checks that the semantic YAML, entities, time dimensions, metrics, and MetricFlow time spine can be parsed into a valid semantic manifest.
+
+Do **not** use `dbt sl validate` as the pre-merge branch check in this project. That command queries the dbt Semantic Layer API, which reads the semantic manifest published by the configured deployment environment. Before this feature branch is merged and a successful production deployment publishes the new manifest, the API can return:
+
+```text
+Empty semantic manifest was found.
+Ensure that you have semantic models defined.
+```
+
+That message does not mean the branch YAML is empty; it means the Semantic Layer service has not yet received a production semantic manifest containing these new definitions.
+
+### Publish and validate through dbt Cloud
+
+After the pull request is merged:
+
+1. Run the normal dbt Cloud **Production Build** successfully so the deployment environment generates fresh dbt artifacts containing the semantic definitions.
+2. In the project's Semantic Layer settings, select the **Production** deployment environment if it is not already configured.
+3. Then run:
 
 ```bash
 dbt sl validate
 dbt sl list metrics
 ```
+
+At this point the Semantic Layer API should be reading the published production semantic manifest rather than an empty one.
+
+If the account does not expose Semantic Layer configuration or `dbt sl` API access, the project can still keep the version-controlled semantic definitions and validate them with `dbt parse`; API querying requires the corresponding dbt platform capability to be enabled.
 
 Expected metric names include:
 
