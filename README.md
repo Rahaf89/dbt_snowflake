@@ -36,7 +36,8 @@ dbt_snowflake/
 │   ├── requirements.txt
 │   └── README.md
 ├── docs/
-│   └── architecture.svg
+│   ├── architecture.svg
+│   └── alerting.md
 ├── models/
 │   ├── staging/
 │   ├── intermediate/
@@ -452,6 +453,48 @@ dbt source freshness
 dbt build
 ```
 
+## Production Alerting
+
+dbt Cloud is currently the production scheduler, so failed-run and freshness alerts are configured around the existing **Production Build** job.
+
+The production sequence is:
+
+```text
+dbt source freshness
+        ↓
+dbt build
+        ↓
+success / failure status
+        ↓
+dbt Cloud notification
+        ↓
+email or Slack recipient
+```
+
+The important design choice is that `dbt source freshness` remains an explicit production job step. If a source exceeds its configured `error_after` threshold, the freshness step fails and the same production-job failure notification path is used.
+
+For this static portfolio dataset, the `ORDERS` freshness thresholds are intentionally wide (`warn_after: 400 days`, `error_after: 800 days`). A real daily-ingestion pipeline should use an SLA appropriate to the source.
+
+### Safe alert-delivery test
+
+The repository includes:
+
+```text
+macros/simulate_alert_failure.sql
+```
+
+For notification testing, create a temporary dbt Cloud job and run:
+
+```bash
+dbt run-operation simulate_alert_failure --vars '{allow_alert_test: true}'
+```
+
+This intentionally fails the temporary job without changing Snowflake data. The expected result is a failed dbt Cloud run followed by the configured email or Slack notification.
+
+Do not add this command to the normal Production Build. Delete or disable the temporary alert-test job after delivery is verified.
+
+The complete setup, testing, validation, and future Airflow handoff are documented in [`docs/alerting.md`](docs/alerting.md).
+
 ## Production Orchestration
 
 A dbt Cloud production environment is connected to Snowflake using a dedicated `TRANSFORMER` role and key-pair authentication.
@@ -767,6 +810,7 @@ Snowflake PROD_* schemas
 - Generated dbt documentation and lineage
 - Incremental event processing with late-arrival lookback
 - Snowflake warehouse credit and query-performance monitoring
+- Alert-ready production job design with a safe notification test macro
 
 ## Implemented Enhancements
 
@@ -786,4 +830,4 @@ The next realistic extensions are:
 - **Expose analytics marts to Looker or another BI tool** and build portfolio dashboards for channel performance, attribution, funnel analysis, and customer LTV.
 - **Add anomaly detection for spend and conversion metrics** to identify unusual daily changes in advertising spend, conversion rate, and attributed revenue.
 - **Create dbt Semantic Layer metrics** so business metrics such as revenue, ROAS, conversion rate, CAC, and LTV are centrally defined.
-- **Add alerting for failed production runs or source freshness failures** through dbt Cloud or Airflow notifications.
+- **Finish dbt Cloud alert delivery setup** by selecting the email or Slack recipient for the Production Build and validating it with the safe temporary alert-test job.
