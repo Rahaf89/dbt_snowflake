@@ -136,6 +136,30 @@ dbt sl query \
 
 If a grouping name differs in the generated semantic manifest, run `dbt sl list dimensions --metrics <metric_name>` and use the dimension name shown by MetricFlow.
 
+## Validated production state
+
+The Semantic Layer has been configured against the project's **Production** deployment environment and validated successfully in dbt Cloud Studio.
+
+The validation path used for this project was:
+
+```text
+Production Build succeeds
+        ↓
+Production selected as Semantic Layer environment
+        ↓
+Semantic Layer Snowflake credential + service token configured
+        ↓
+dbt sl validate
+        ↓
+dbt sl list metrics
+        ↓
+dbt sl query ...
+```
+
+`dbt sl validate` now completes successfully, the expected metrics are listed, and Semantic Layer queries execute against Snowflake using the configured production credential.
+
+The Semantic Layer credential uses Snowflake key-pair authentication. Private keys, passphrases, and service-token values are not stored in this repository.
+
 ## Production deployment
 
 After the pull request is merged, run the normal dbt Cloud Production Build. The deployment job should at least run `dbt parse` (the existing `dbt build` also parses the project) so the semantic manifest reflects the latest metric definitions.
