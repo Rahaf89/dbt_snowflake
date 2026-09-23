@@ -20,7 +20,7 @@ fake = Faker()
 Faker.seed(SEED)
 random.seed(SEED)
 
-CHANNELS = ["organic", "google_ads", "meta_ads", "email", "referral"]
+CHANNELS = ["organic", "google_ads", "meta_ads", "email", "direct"]
 EVENT_TYPES = ["page_view", "product_view", "add_to_cart", "checkout", "purchase"]
 CURRENCIES = ["USD", "EUR", "GBP"]
 

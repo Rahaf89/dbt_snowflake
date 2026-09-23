@@ -182,6 +182,38 @@ Models:
 - `MART_CUSTOMER_LTV`
 - `MART_FUNNEL`
 
+## Incremental Event Processing
+
+`STG_WEB_EVENTS` is materialized as an **incremental Snowflake table** because event data is the natural high-volume source in this project.
+
+The model uses:
+
+```text
+materialization: incremental
+strategy:        merge
+unique key:      event_id
+lookback window: 3 days
+```
+
+On the first run, dbt builds the complete table. On later runs, it only rereads recent rows from `NORTHWIND.RAW.WEB_EVENTS` and merges them into the existing staging table.
+
+The lookback window is configurable in `dbt_project.yml`:
+
+```yaml
+vars:
+  event_lookback_days: 3
+```
+
+Why use a lookback instead of only loading events newer than the current maximum timestamp? Real event pipelines can receive **late-arriving data**. Reprocessing the most recent few days allows those late records to be captured, while `event_id` prevents duplicates.
+
+To deliberately rebuild the incremental model from scratch:
+
+```bash
+dbt build --select stg_web_events+ --full-refresh
+```
+
+This pattern reduces the amount of source data scanned as the event table grows while keeping the logic safe for late arrivals.
+
 ## Marketing Attribution
 
 The attribution model is configurable through dbt variables:
@@ -383,6 +415,116 @@ This project supports questions such as:
 4. What is 90-day customer lifetime value by acquisition channel and cohort?
 5. How do first-touch, last-touch, and linear attribution change channel performance?
 
+## CI/CD — How This Repository Deploys Changes
+
+This project separates **CI (Continuous Integration)** from **CD (Continuous Delivery/Deployment)**.
+
+### CI: GitHub Actions validates every change
+
+The CI workflow is defined in:
+
+```text
+.github/workflows/ci.yml
+```
+
+It runs automatically when:
+
+```text
+a pull request targets main
+or
+a commit is pushed to main
+```
+
+The workflow uses an Ubuntu GitHub Actions runner and performs these checks in order:
+
+```text
+Checkout repository
+      ↓
+Set up Python 3.12
+      ↓
+Install dbt-core + dbt-snowflake + PyYAML
+      ↓
+Compile Python files
+      ↓
+Validate YAML files
+      ↓
+dbt deps
+      ↓
+dbt parse
+      ↓
+Check required repository structure
+```
+
+These checks catch problems such as Python syntax errors, broken YAML, missing dbt packages, invalid Jinja, broken `ref()` / `source()` relationships, and accidentally deleted core project files before code is merged.
+
+### Why CI does not need Snowflake credentials
+
+CI uses:
+
+```text
+.github/ci/profiles.yml
+```
+
+This profile contains **dummy Snowflake connection values**. The workflow runs `dbt parse`, not `dbt run` or `dbt build`, so it validates the dbt project without opening a real Snowflake connection.
+
+That means no Snowflake password, RSA private key, private-key passphrase, or dbt Cloud token is stored in GitHub for this CI workflow.
+
+### PR quality gate
+
+A normal change follows this path:
+
+```text
+feature branch
+      ↓
+open Pull Request
+      ↓
+GitHub Actions CI runs
+      ↓
+green CI = code can be reviewed/merged
+red CI   = fix the branch and CI runs again
+      ↓
+merge into main
+```
+
+The incremental `WEB_EVENTS` change in PR #2 is an example of this workflow: the model change was made on a feature branch, CI validated it, and it is merged only after the CI check passes.
+
+### CD: dbt Cloud deploys `main` to Snowflake
+
+GitHub Actions is the **CI layer**. The production deployment is handled by the existing **dbt Cloud Production Build** job.
+
+After a pull request is merged:
+
+```text
+Pull Request merged
+        ↓
+GitHub main updated
+        ↓
+dbt Cloud Production Build checks out main
+        ↓
+dbt deps
+        ↓
+dbt source freshness
+        ↓
+dbt build
+        ↓
+tests + snapshots
+        ↓
+generate dbt docs
+        ↓
+Snowflake PROD_* schemas updated
+```
+
+The production job uses the Snowflake `TRANSFORMER` role and key-pair authentication documented in [`snowflake/README.md`](snowflake/README.md).
+
+At the moment, dbt Cloud owns the production schedule. The optional Airflow DAG can later become the scheduler/orchestrator; if Airflow is enabled for scheduling, the dbt Cloud schedule should be disabled to avoid duplicate runs.
+
+### Why use two systems?
+
+- **GitHub Actions CI** answers: *Is this code structurally safe to merge?*
+- **dbt Cloud production job** answers: *Can this code actually build and test the production analytics models in Snowflake?*
+
+This keeps lightweight validation fast and credential-free while production execution remains inside the platform that already owns the dbt/Snowflake connection.
+
 ## Continuous Integration
 
 Pull requests to `main` and pushes to `main` run the GitHub Actions workflow in:
@@ -446,7 +588,6 @@ Snowflake PROD_* schemas
 
 - add CI jobs for pull requests
 - deploy the included Airflow DAG in a managed Airflow environment
-- add incremental models for large event tables
 - expose marts to Looker or another BI tool
 - add anomaly detection for spend and conversion metrics
 - create dbt Semantic Layer metrics
