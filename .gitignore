@@ -1,0 +1,27 @@
+# dbt generated files
+target/
+dbt_packages/
+logs/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Generated raw data
+raw_data/
+
+# Secrets / credentials
+*.p8
+*.pem
+*.key
+.env
+.env.*
+profiles.yml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
