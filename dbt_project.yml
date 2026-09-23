@@ -1,0 +1,29 @@
+name: 'northwind_marketing'
+version: '1.0.0'
+config-version: 2
+
+profile: 'northwind_marketing'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+snapshot-paths: ["snapshots"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  # switch attribution model without touching SQL: first_touch | last_touch | linear
+  attribution_model: "linear"
+  attribution_window_days: 30
+
+models:
+  northwind_marketing:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table

@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: raw
+    # Points at Snowflake tables in the RAW schema (loaded via Snowsight's
+    # "Load Data" wizard, or COPY INTO from a stage). Schema/database come
+    # from your dbt Cloud connection, so no hardcoded values here.
+    schema: raw
+    tables:
+      - name: customers
+      - name: google_ads_spend
+      - name: meta_ads_spend
+      - name: web_events
+      - name: orders
+        loaded_at_field: order_timestamp
+        freshness:
+          warn_after: { count: 400, period: day }
+          error_after: { count: 800, period: day }

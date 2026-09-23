@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: stg_customers
+    columns:
+      - name: customer_id
+        tests: [unique, not_null]
+      - name: acquisition_channel
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['google_ads', 'meta_ads', 'organic', 'email', 'direct']
+
+  - name: stg_ad_spend
+    columns:
+      - name: campaign_id
+        tests: [not_null]
+      - name: spend
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+
+  - name: stg_web_events
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+      - name: event_type
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['page_view', 'add_to_cart', 'purchase']
+
+  - name: stg_orders
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: amount_usd
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
