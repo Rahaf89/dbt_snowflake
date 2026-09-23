@@ -25,6 +25,7 @@ dbt_snowflake/
 │   ├── 01_setup.sql
 │   ├── 02_raw_tables.sql
 │   ├── 03_key_pair_template.sql
+│   ├── 04_monitoring_grants.sql
 │   └── README.md
 ├── ingestion/
 │   ├── generate_data.py
@@ -39,7 +40,8 @@ dbt_snowflake/
 ├── models/
 │   ├── staging/
 │   ├── intermediate/
-│   └── marts/
+│   ├── marts/
+│   └── monitoring/
 ├── snapshots/
 ├── tests/
 ├── dbt_project.yml
@@ -58,6 +60,7 @@ flowchart LR
     B --> C[PROD_INTERMEDIATE<br/>business logic & attribution views]
     C --> D[PROD_MARTS<br/>analytics-ready tables]
     B --> E[SNAPSHOTS<br/>SCD customer history]
+    G[SNOWFLAKE.ACCOUNT_USAGE] --> H[PROD_MONITORING<br/>cost & query telemetry]
     D --> F[BI / Reporting / Analysis]
 ```
 
@@ -69,6 +72,7 @@ NORTHWIND
 ├── PROD_STAGING
 ├── PROD_INTERMEDIATE
 ├── PROD_MARTS
+├── PROD_MONITORING
 └── SNAPSHOTS
 ```
 
@@ -135,12 +139,17 @@ models/
 ├── intermediate/
 │   ├── int_attributed_revenue.sql
 │   └── int_customer_touchpoints.sql
-└── marts/
-    ├── _marts.yml
+├── marts/
+│   ├── _marts.yml
     ├── fct_ad_spend.sql
     ├── mart_channel_performance.sql
     ├── mart_customer_ltv.sql
-    └── mart_funnel.sql
+│   └── mart_funnel.sql
+└── monitoring/
+    ├── _monitoring_sources.yml
+    ├── _monitoring.yml
+    ├── mon_warehouse_daily_usage.sql
+    └── mon_query_performance.sql
 
 snapshots/
 └── scd_customers.sql
@@ -213,6 +222,85 @@ dbt build --select stg_web_events+ --full-refresh
 ```
 
 This pattern reduces the amount of source data scanned as the event table grows while keeping the logic safe for late arrivals.
+
+## Snowflake Cost & Query Monitoring
+
+The project includes a dedicated dbt monitoring layer backed by Snowflake's `SNOWFLAKE.ACCOUNT_USAGE` metadata.
+
+Production schema:
+
+```text
+NORTHWIND.PROD_MONITORING
+```
+
+Models:
+
+- `MON_WAREHOUSE_DAILY_USAGE` — daily warehouse credit consumption and an estimate of compute credits spent while no query was actively executing.
+- `MON_QUERY_PERFORMANCE` — query execution telemetry for identifying long-running and high-scan queries.
+
+The monitoring window and warehouse are configurable in `dbt_project.yml`:
+
+```yaml
+vars:
+  monitoring_lookback_days: 30
+  monitored_warehouse: "TRANSFORM_WH_XS"
+```
+
+Before dbt can build these models, run this once in Snowflake using `ACCOUNTADMIN`:
+
+```sql
+GRANT DATABASE ROLE SNOWFLAKE.USAGE_VIEWER TO ROLE TRANSFORMER;
+```
+
+The repository includes the same grant in:
+
+```text
+snowflake/04_monitoring_grants.sql
+```
+
+The grant is read-only access to Snowflake historical usage metadata. It does not give the `TRANSFORMER` role permission to resize, suspend, resume, or otherwise administer warehouses.
+
+### Monitoring warehouse efficiency
+
+Example:
+
+```sql
+SELECT
+    usage_date,
+    warehouse_name,
+    compute_credits,
+    query_attributed_credits,
+    estimated_idle_credits,
+    estimated_idle_pct
+FROM NORTHWIND.PROD_MONITORING.MON_WAREHOUSE_DAILY_USAGE
+ORDER BY usage_date DESC;
+```
+
+`estimated_idle_credits` is calculated as compute credits minus credits Snowflake attributes to query execution. It is an operational efficiency indicator, not a final invoice amount.
+
+### Finding expensive queries
+
+Example:
+
+```sql
+SELECT
+    query_id,
+    user_name,
+    role_name,
+    total_elapsed_seconds,
+    gb_scanned,
+    cache_hit_pct,
+    start_time
+FROM NORTHWIND.PROD_MONITORING.MON_QUERY_PERFORMANCE
+ORDER BY total_elapsed_seconds DESC
+LIMIT 20;
+```
+
+This makes it easier to investigate queries that run for a long time, scan large amounts of data, or make poor use of warehouse cache.
+
+The monitoring models deliberately do **not** persist raw `QUERY_TEXT`, because SQL text can sometimes contain sensitive literals.
+
+Snowflake `ACCOUNT_USAGE` is historical telemetry rather than real-time monitoring, so recent activity can appear with a delay.
 
 ## Marketing Attribution
 
@@ -363,6 +451,9 @@ models:
     marts:
       +materialized: table
       +schema: marts
+    monitoring:
+      +materialized: view
+      +schema: monitoring
 ```
 
 With `PROD` as the production base schema, dbt generates:
@@ -371,6 +462,7 @@ With `PROD` as the production base schema, dbt generates:
 PROD_STAGING
 PROD_INTERMEDIATE
 PROD_MARTS
+PROD_MONITORING
 ```
 
 ## Running the Project
@@ -583,13 +675,13 @@ Snowflake PROD_* schemas
 - Python synthetic-data generator
 - Architecture diagram for reviewers
 - Generated dbt documentation and lineage
+- Incremental event processing with late-arrival lookback
+- Snowflake warehouse credit and query-performance monitoring
 
 ## Future Improvements
 
-- add CI jobs for pull requests
-- deploy the included Airflow DAG in a managed Airflow environment
+- run the included Airflow DAG in a local or self-hosted Apache Airflow environment
 - expose marts to Looker or another BI tool
 - add anomaly detection for spend and conversion metrics
 - create dbt Semantic Layer metrics
-- add warehouse cost monitoring and query optimization
 - add alerting for failed production runs or freshness failures
