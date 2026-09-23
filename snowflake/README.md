@@ -269,6 +269,64 @@ NORTHWIND.PROD_MONITORING
 
 Note that Snowflake Account Usage data is delayed rather than real time. Query history can lag by tens of minutes, and warehouse metering data can lag by several hours.
 
+### Validate the monitoring deployment
+
+After the grant is applied:
+
+```bash
+dbt build --select monitoring
+```
+
+Then, after the change is merged to `main`, run the dbt Cloud **Production Build** once.
+
+Verify the production objects in Snowflake:
+
+```sql
+SHOW SCHEMAS IN DATABASE NORTHWIND;
+SHOW VIEWS IN SCHEMA NORTHWIND.PROD_MONITORING;
+```
+
+Validate the warehouse-usage view:
+
+```sql
+SELECT
+    usage_date,
+    warehouse_name,
+    credits_used,
+    compute_credits,
+    query_attributed_credits,
+    estimated_idle_credits,
+    estimated_idle_pct
+FROM NORTHWIND.PROD_MONITORING.MON_WAREHOUSE_DAILY_USAGE
+ORDER BY usage_date DESC;
+```
+
+Validate the query-performance view:
+
+```sql
+SELECT
+    query_id,
+    warehouse_name,
+    total_elapsed_seconds,
+    gb_scanned,
+    cache_hit_pct,
+    start_time
+FROM NORTHWIND.PROD_MONITORING.MON_QUERY_PERFORMANCE
+ORDER BY start_time DESC
+LIMIT 20;
+```
+
+Expected validation:
+
+- `PROD_MONITORING` exists.
+- Both monitoring views exist.
+- dbt tests pass.
+- credit, elapsed-time, and scan metrics are non-negative.
+- `query_id` is populated and unique.
+- rows refer to the configured warehouse, `TRANSFORM_WH_XS`.
+- very recent usage may be absent because `ACCOUNT_USAGE` is delayed.
+
+
 ## Production schemas
 
 dbt creates these from the production base schema and the layer-specific schema configuration in `dbt_project.yml`:
