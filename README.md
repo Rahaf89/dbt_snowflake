@@ -1,6 +1,6 @@
-# Northwind Marketing Analytics with dbt + Snowflake
+# Northwind Marketing Analytics with dbt + Snowflake + Airflow
 
-A production-style analytics engineering project built with **dbt Cloud** and **Snowflake**.
+A production-style analytics engineering project built with **Snowflake**, **dbt Cloud**, **Python**, and an optional **Apache Airflow** orchestration layer.
 
 The project transforms raw customer, order, web event, and paid media data into tested analytical models for:
 
@@ -20,6 +20,16 @@ dbt_snowflake/
 │   ├── 02_raw_tables.sql
 │   ├── 03_key_pair_template.sql
 │   └── README.md
+├── ingestion/
+│   ├── generate_data.py
+│   └── requirements.txt
+├── airflow/
+│   ├── dags/
+│   │   └── northwind_marketing_pipeline.py
+│   ├── requirements.txt
+│   └── README.md
+├── docs/
+│   └── architecture.svg
 ├── models/
 │   ├── staging/
 │   ├── intermediate/
@@ -35,6 +45,8 @@ dbt_snowflake/
 The repository keeps the Snowflake infrastructure/setup scripts and the dbt transformation project together so the full pipeline is version-controlled in one place.
 
 ## Architecture
+
+![Northwind Marketing Analytics architecture](docs/architecture.svg)
 
 ```mermaid
 flowchart LR
@@ -61,10 +73,35 @@ Development is isolated from production through dbt development schemas, while s
 ## Tech Stack
 
 - **Snowflake** — cloud data warehouse
-- **dbt Cloud** — transformation, testing, documentation, lineage, and orchestration
+- **dbt Cloud** — transformation, testing, documentation, lineage, and production job execution
+- **Apache Airflow** — optional Python orchestration layer that can trigger the dbt Cloud production job
 - **GitHub** — version control and deployment workflow
-- **Python + Faker** — synthetic source-data generation
+- **Python + Faker** — synthetic source-data generation and Airflow DAGs
 - **SQL / Jinja** — transformation logic
+
+## Project Setup — Reviewer Quick Start
+
+A reviewer can understand or reproduce the project in a few steps:
+
+1. **Review the architecture** in `docs/architecture.svg`.
+2. **Create the Snowflake environment** with `snowflake/01_setup.sql` and `snowflake/02_raw_tables.sql`.
+3. **Generate sample source data**:
+   ```bash
+   cd ingestion
+   pip install -r requirements.txt
+   python generate_data.py --out ../raw_data
+   ```
+4. **Load the five CSV files** from `raw_data/` into `NORTHWIND.RAW`.
+5. **Configure dbt Cloud** with database `NORTHWIND`, warehouse `TRANSFORM_WH_XS`, role `TRANSFORMER`, and key-pair authentication.
+6. **Build and test the dbt project**:
+   ```bash
+   dbt deps
+   dbt source freshness
+   dbt build
+   ```
+7. **Optional Airflow orchestration:** install `airflow/requirements.txt`, configure the `snowflake_northwind` and `dbt_cloud_default` Airflow connections, and deploy `airflow/dags/northwind_marketing_pipeline.py`.
+
+For a quick code review, start with `models/staging/`, then `models/intermediate/`, `models/marts/`, `tests/`, and finally the Airflow DAG.
 
 ## Source Data
 
@@ -223,6 +260,30 @@ Generate dbt documentation
 
 The production job is configured for a daily schedule at **07:00 UTC**.
 
+## Airflow Orchestration Option
+
+The repository includes a Python DAG at:
+
+```text
+airflow/dags/northwind_marketing_pipeline.py
+```
+
+The DAG performs three orchestration steps:
+
+```text
+Validate Snowflake RAW sources
+          ↓
+Trigger dbt Cloud Production Build
+          ↓
+Validate final PROD_MARTS tables
+```
+
+This keeps dbt Cloud responsible for transformation logic, source freshness, tests, snapshots, and documentation while Airflow coordinates the wider workflow.
+
+**Use one production scheduler.** If Airflow owns the daily schedule, disable the schedule inside dbt Cloud to avoid duplicate runs. The example DAG is configured for `07:00 UTC`.
+
+Airflow uses the official dbt Cloud provider's `DbtCloudRunJobOperator` to trigger the existing project/environment/job by name, and the Snowflake provider for SQL validation tasks.
+
 ## Snowflake Security
 
 dbt runs with a dedicated transformation role rather than `ACCOUNTADMIN`.
@@ -335,11 +396,15 @@ Snowflake PROD_* schemas
 - Dedicated transformation role
 - Git-based deployment
 - Scheduled dbt Cloud production job
+- Optional Apache Airflow DAG for cross-system orchestration
+- Python synthetic-data generator
+- Architecture diagram for reviewers
 - Generated dbt documentation and lineage
 
 ## Future Improvements
 
 - add CI jobs for pull requests
+- deploy the included Airflow DAG in a managed Airflow environment
 - add incremental models for large event tables
 - expose marts to Looker or another BI tool
 - add anomaly detection for spend and conversion metrics
