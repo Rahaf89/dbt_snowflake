@@ -302,6 +302,96 @@ The monitoring models deliberately do **not** persist raw `QUERY_TEXT`, because 
 
 Snowflake `ACCOUNT_USAGE` is historical telemetry rather than real-time monitoring, so recent activity can appear with a delay.
 
+### Testing and validating the monitoring layer
+
+Use this sequence after adding or changing the monitoring models.
+
+**1. Grant read-only Account Usage access**
+
+Run once in Snowflake:
+
+```sql
+USE ROLE ACCOUNTADMIN;
+
+GRANT DATABASE ROLE SNOWFLAKE.USAGE_VIEWER
+TO ROLE TRANSFORMER;
+```
+
+**2. Validate in the dbt development environment**
+
+Run:
+
+```bash
+dbt build --select monitoring
+```
+
+A successful run means both monitoring models compile and execute with the configured Snowflake connection and their dbt schema tests pass.
+
+**3. Validate the pull request**
+
+Before merge, confirm the GitHub Actions CI check is green. CI validates Python/YAML, installs dbt packages, and runs `dbt parse` without using production Snowflake credentials.
+
+**4. Merge to `main` and run the dbt Cloud Production Build**
+
+The production job should create:
+
+```text
+NORTHWIND.PROD_MONITORING.MON_WAREHOUSE_DAILY_USAGE
+NORTHWIND.PROD_MONITORING.MON_QUERY_PERFORMANCE
+```
+
+**5. Confirm the production schema and views**
+
+Run in Snowflake:
+
+```sql
+SHOW SCHEMAS IN DATABASE NORTHWIND;
+
+SHOW VIEWS IN SCHEMA NORTHWIND.PROD_MONITORING;
+```
+
+You should see the `PROD_MONITORING` schema and both monitoring views.
+
+**6. Validate warehouse-usage data**
+
+```sql
+SELECT
+    usage_date,
+    warehouse_name,
+    credits_used,
+    compute_credits,
+    query_attributed_credits,
+    estimated_idle_credits,
+    estimated_idle_pct
+FROM NORTHWIND.PROD_MONITORING.MON_WAREHOUSE_DAILY_USAGE
+ORDER BY usage_date DESC;
+```
+
+Check that credit values are non-negative and that the configured warehouse is `TRANSFORM_WH_XS`.
+
+**7. Validate query-performance data**
+
+```sql
+SELECT
+    query_id,
+    warehouse_name,
+    total_elapsed_seconds,
+    gb_scanned,
+    cache_hit_pct,
+    start_time
+FROM NORTHWIND.PROD_MONITORING.MON_QUERY_PERFORMANCE
+ORDER BY start_time DESC
+LIMIT 20;
+```
+
+Check that query IDs are populated, elapsed time and bytes scanned are non-negative, and rows are associated with the monitored warehouse.
+
+**8. Interpret empty or delayed results correctly**
+
+An empty or incomplete recent window does not automatically mean the models are broken. `SNOWFLAKE.ACCOUNT_USAGE` is delayed, so newly executed queries and recent warehouse consumption can appear later.
+
+This validation path was used for the project: development build → PR CI → merge to `main` → production build → Snowflake schema/view checks → monitoring data checks.
+
 ## Marketing Attribution
 
 The attribution model is configurable through dbt variables:
