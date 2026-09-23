@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate dbt, Python, and YAML
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install CI dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "dbt-core>=1.9,<2.0" "dbt-snowflake>=1.9,<2.0" PyYAML
+
+      - name: Check Python syntax
+        run: |
+          python -m py_compile ingestion/generate_data.py
+          python -m py_compile airflow/dags/northwind_marketing_pipeline.py
+
+      - name: Validate YAML files
+        run: |
+          python .github/ci/validate_yaml.py
+
+      - name: Install dbt packages
+        run: |
+          dbt deps --profiles-dir .github/ci
+
+      - name: Parse dbt project
+        run: |
+          dbt parse --profiles-dir .github/ci --target ci --no-partial-parse
+
+      - name: Verify required project files
+        run: |
+          python .github/ci/check_repo_structure.py
