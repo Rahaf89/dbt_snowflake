@@ -486,6 +486,8 @@ dbt sl validate
 dbt sl list metrics
 ```
 
+This project has been validated successfully against the dbt Semantic Layer API: `dbt sl validate` passes, the metric catalog is returned by `dbt sl list metrics`, and Semantic Layer metric queries execute successfully from dbt Cloud Studio.
+
 Metrics can then be queried from the dbt Cloud CLI, for example:
 
 ```bash
@@ -926,7 +928,7 @@ The following improvements were originally planned as future work and are now im
 - **Production CI/CD workflow documentation** — the README documents how GitHub Actions CI, pull requests, dbt Cloud, and Snowflake work together from development through production deployment.
 - **Production failure and freshness alerting workflow** — the repository includes dbt Cloud alerting guidance plus a guarded `simulate_alert_failure` macro for safely testing failed-run notifications without modifying Snowflake data. The failure path is implemented; external email delivery is being validated in dbt Cloud.
 - **Marketing anomaly detection** — rolling channel-level z-score monitoring flags unusual daily spend, attributed revenue, and conversion-rate movements, with warning-level dbt tests.
-- **dbt Semantic Layer metrics** — centrally defines attributed revenue, ad spend, ROAS, CAC, conversion rate, and 90-day LTV so downstream tools reuse the same business logic.
+- **dbt Semantic Layer metrics** — centrally defines attributed revenue, ad spend, ROAS, CAC, conversion rate, and 90-day LTV so downstream tools reuse the same business logic. The Production environment is configured as the Semantic Layer deployment, and `dbt sl validate`, metric listing, and metric queries have been validated successfully.
 
 ## Future Improvements
 
