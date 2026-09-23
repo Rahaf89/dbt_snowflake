@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: mon_warehouse_daily_usage
+    description: >
+      Daily credit-consumption and warehouse-efficiency metrics for the
+      configured Snowflake warehouse.
+    columns:
+      - name: usage_date
+        tests: [not_null]
+      - name: warehouse_name
+        tests: [not_null]
+      - name: compute_credits
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+      - name: estimated_idle_credits
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+
+  - name: mon_query_performance
+    description: >
+      Query execution telemetry for identifying long-running and
+      high-scan queries on the configured Snowflake warehouse.
+    columns:
+      - name: query_id
+        tests: [unique, not_null]
+      - name: warehouse_name
+        tests: [not_null]
+      - name: total_elapsed_ms
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+      - name: bytes_scanned
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
