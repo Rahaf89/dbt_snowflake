@@ -91,7 +91,7 @@ A reviewer can understand or reproduce the project in a few steps:
    pip install -r requirements.txt
    python generate_data.py --out ../raw_data
    ```
-4. **Load the five CSV files** from `raw_data/` into `NORTHWIND.RAW`.
+4. **Load the five CSV files** from `raw_data/` into the matching tables in `NORTHWIND.RAW`. The exact Snowsight steps, table mapping, and verification queries are documented in [`snowflake/README.md`](snowflake/README.md).
 5. **Configure dbt Cloud** with database `NORTHWIND`, warehouse `TRANSFORM_WH_XS`, role `TRANSFORMER`, and key-pair authentication.
 6. **Build and test the dbt project**:
    ```bash
