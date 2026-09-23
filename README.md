@@ -11,6 +11,29 @@ The project transforms raw customer, order, web event, and paid media data into 
 - ad spend reporting
 - customer history tracking with snapshots
 
+## Repository Layout
+
+```text
+dbt_snowflake/
+├── snowflake/
+│   ├── 01_setup.sql
+│   ├── 02_raw_tables.sql
+│   ├── 03_key_pair_template.sql
+│   └── README.md
+├── models/
+│   ├── staging/
+│   ├── intermediate/
+│   └── marts/
+├── snapshots/
+├── tests/
+├── dbt_project.yml
+├── packages.yml
+├── .gitignore
+└── README.md
+```
+
+The repository keeps the Snowflake infrastructure/setup scripts and the dbt transformation project together so the full pipeline is version-controlled in one place.
+
 ## Architecture
 
 ```mermaid
