@@ -25,3 +25,9 @@ profiles.yml
 Thumbs.db
 .vscode/
 .idea/
+
+# Airflow local runtime
+airflow/logs/
+airflow/airflow.db
+airflow/airflow.cfg
+airflow/webserver_config.py
