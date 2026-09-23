@@ -53,6 +53,12 @@ The example DAG is scheduled for `07:00 UTC`.
 
 **Important:** choose one scheduler for production. If Airflow owns the schedule, disable the dbt Cloud schedule so the pipeline does not run twice.
 
+## Alerting ownership
+
+While dbt Cloud owns the production schedule, configure failed-run and freshness notifications in dbt Cloud. The setup and safe validation procedure are documented in [`../docs/alerting.md`](../docs/alerting.md).
+
+If Airflow becomes the production scheduler later, move orchestration-level failure notifications to Airflow and disable the dbt Cloud schedule so the same pipeline is not triggered twice.
+
 ## Dependencies
 
 Install the packages from `airflow/requirements.txt` into an existing Airflow environment.
