@@ -23,6 +23,10 @@ vars:
   # Snowflake ACCOUNT_USAGE monitoring window and warehouse
   monitoring_lookback_days: 30
   monitored_warehouse: "TRANSFORM_WH_XS"
+  # rolling anomaly detection configuration
+  anomaly_lookback_periods: 28
+  anomaly_min_history_periods: 7
+  anomaly_zscore_threshold: 3.0
 
 models:
   northwind_marketing:
