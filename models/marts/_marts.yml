@@ -14,9 +14,14 @@ models:
     description: "Grain: one row per channel, per month. Powers the Executive Summary dashboard page."
     semantic_model:
       enabled: true
-    agg_time_dimension: month
+    agg_time_dimension: performance_month
     columns:
-      - name: month
+      - name: channel_month_key
+        entity:
+          name: channel_month
+          type: primary
+        tests: [unique, not_null]
+      - name: performance_month
         granularity: month
         dimension:
           type: time
@@ -52,9 +57,14 @@ models:
     description: "Grain: one row per channel, per day. Powers the Funnel dashboard page."
     semantic_model:
       enabled: true
-    agg_time_dimension: day
+    agg_time_dimension: funnel_date
     columns:
-      - name: day
+      - name: channel_day_key
+        entity:
+          name: channel_day
+          type: primary
+        tests: [unique, not_null]
+      - name: funnel_date
         granularity: day
         dimension:
           type: time
