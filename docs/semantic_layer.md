@@ -39,6 +39,11 @@ dbt run --select time_spine_daily
 
 ## Semantic models
 
+### Explicit grain entities
+
+MetricFlow semantic models need an unambiguous primary grain. The monthly channel mart exposes `channel_month_key` as the primary entity, while the daily funnel mart exposes `channel_day_key`. Both are deterministic dbt-utils surrogate keys built from the natural composite grain. The time columns use `performance_month` and `funnel_date` rather than reserved granularity words such as `month` or `day`.
+
+
 `mart_channel_performance` provides channel/month dimensions and the base metrics used by ROAS and CAC.
 
 `mart_funnel` provides channel/day dimensions and the base metrics used by conversion rate.
