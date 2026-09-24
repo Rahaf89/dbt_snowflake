@@ -32,5 +32,7 @@ airflow/airflow.db
 airflow/airflow.cfg
 airflow/webserver_config.py
 
-# Power BI Desktop local report binaries
+# Power BI Desktop report binaries are ignored by default.
+# The portfolio artifact below is explicitly versioned because it contains synthetic demo data.
 *.pbix
+!docs/power_bi/Northwind_Marketing_Analytics.pbix
