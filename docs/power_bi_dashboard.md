@@ -2,7 +2,44 @@
 
 This project includes a completed four-page Power BI Desktop report built on the Snowflake production marts created by dbt.
 
-The report is intentionally maintained as a local Power BI Desktop artifact. It is not published to Power BI Service because publishing requires access to an organizational Microsoft tenant. The local `.pbix` file is not committed to Git because Import mode can contain cached source data.
+The report is maintained in Power BI Desktop and is not published to Power BI Service because publishing requires access to an organizational Microsoft tenant.
+
+For portfolio review, the repository versions a copy of the finished `.pbix`, a PDF export, and screenshots. The underlying dataset is synthetic. Power BI binary files are ignored by default, with an explicit exception for this portfolio artifact.
+
+## Portfolio artifacts
+
+The finished dashboard artifacts live in:
+
+```text
+docs/power_bi/
+├── Northwind_Marketing_Analytics.pbix
+├── Northwind_Marketing_Analytics.pdf
+├── executive_summary.jpg
+├── marketing_attribution.jpg
+├── funnel_analysis.jpg
+└── customer_ltv.jpg
+```
+
+Downloads:
+
+- [Power BI Desktop report](power_bi/Northwind_Marketing_Analytics.pbix)
+- [PDF dashboard export](power_bi/Northwind_Marketing_Analytics.pdf)
+
+### Executive Summary
+
+![Executive Summary](power_bi/executive_summary.jpg)
+
+### Marketing Attribution
+
+![Marketing Attribution](power_bi/marketing_attribution.jpg)
+
+### Funnel Analysis
+
+![Funnel Analysis](power_bi/funnel_analysis.jpg)
+
+### Customer LTV & Cohorts
+
+![Customer LTV](power_bi/customer_ltv.jpg)
 
 ## Data source
 
@@ -251,14 +288,13 @@ The final report was validated by:
 3. confirming the Funnel Analysis channel slicer uses `MART_FUNNEL[CHANNEL]`,
 4. checking KPI measures against the underlying marts,
 5. exporting all report pages to PDF for a static portfolio review,
-6. keeping the `.pbix` local rather than committing cached Import-mode data.
+6. keeping the finished `.pbix`, PDF, and screenshots together as portfolio artifacts.
 
 ## Security and repository policy
 
-Do not commit:
+Never commit credentials or secrets:
 
 ```text
-*.pbix
 Snowflake passwords
 private RSA keys
 private-key passphrases
@@ -266,6 +302,4 @@ dbt Cloud tokens
 Semantic Layer service tokens
 ```
 
-The repository `.gitignore` explicitly excludes Power BI `.pbix` binaries as well as the existing credential file patterns.
-
-A static PDF export or selected dashboard screenshots can be shared separately as portfolio evidence because they contain only synthetic project data.
+Power BI `.pbix` files are ignored by default because Import mode can cache data. This repository makes one explicit exception for `docs/power_bi/Northwind_Marketing_Analytics.pbix` because it is a portfolio artifact built from synthetic project data.
