@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1650" height="560" viewBox="0 0 1650 560" role="img" aria-labelledby="title desc">
   <title id="title">Northwind Marketing Analytics architecture</title>
-  <desc id="desc">Airflow orchestrates a dbt Cloud production job that transforms Snowflake raw data through staging, intermediate, marts and snapshots.</desc>
+  <desc id="desc">dbt Cloud transforms Snowflake raw data through staging, intermediate, marts and snapshots; production marts feed Power BI Desktop and the dbt Semantic Layer, with Airflow available as an optional orchestrator.</desc>
   <defs>
     <style>
       .bg { fill:#0f172a; }
@@ -64,6 +64,16 @@
   <text class="small" x="930" y="447" text-anchor="middle">version control</text>
   <text class="small" x="930" y="470" text-anchor="middle">PR → main → deploy</text>
 
+  <rect class="accent" x="1100" y="380" width="235" height="105"/>
+  <text class="label" x="1217" y="418" text-anchor="middle">Power BI Desktop</text>
+  <text class="small" x="1217" y="447" text-anchor="middle">4-page portfolio dashboard</text>
+  <text class="small" x="1217" y="470" text-anchor="middle">PROD_MARTS consumer</text>
+
+  <rect class="box" x="1380" y="380" width="225" height="105"/>
+  <text class="label" x="1492" y="418" text-anchor="middle">dbt Semantic Layer</text>
+  <text class="small" x="1492" y="447" text-anchor="middle">MetricFlow metrics</text>
+  <text class="small" x="1492" y="470" text-anchor="middle">Production environment</text>
+
   <path class="arrow" d="M235 177 L300 177"/>
   <path class="arrow" d="M490 177 L555 177"/>
   <path class="arrow" d="M760 160 L825 137"/>
@@ -72,6 +82,8 @@
   <path class="arrow" d="M1035 137 L1100 137"/>
   <path class="dash" d="M657 380 L657 235"/>
   <path class="dash" d="M930 380 L715 235"/>
+  <path class="arrow" d="M1217 310 L1217 380"/>
+  <path class="arrow" d="M1335 262 L1492 380"/>
 
   <text class="small" x="500" y="525">Airflow can own the schedule and trigger the existing dbt Cloud job; disable the dbt Cloud schedule if Airflow is enabled.</text>
 </svg>

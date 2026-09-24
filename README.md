@@ -1,8 +1,8 @@
-# Northwind Marketing Analytics with dbt + Snowflake + Airflow
+# Northwind Marketing Analytics with dbt + Snowflake + Power BI
 
 [![CI](https://github.com/Rahaf89/dbt_snowflake/actions/workflows/ci.yml/badge.svg)](https://github.com/Rahaf89/dbt_snowflake/actions/workflows/ci.yml)
 
-A production-style analytics engineering project built with **Snowflake**, **dbt Cloud**, **Python**, and an optional **Apache Airflow** orchestration layer.
+A production-style analytics engineering project built with **Snowflake**, **dbt Cloud**, **Power BI Desktop**, **Python**, and an optional **Apache Airflow** orchestration layer.
 
 The project transforms raw customer, order, web event, and paid media data into tested analytical models for:
 
@@ -15,7 +15,7 @@ The project transforms raw customer, order, web event, and paid media data into 
 
 ![Northwind Marketing Analytics architecture](docs/architecture.svg)
 
-> **Architecture at a glance:** Python generates reproducible sample data, Snowflake stores raw sources, dbt Cloud builds and tests the transformation layers, and Airflow is included as an optional orchestration layer for triggering the dbt Cloud production job.
+> **Architecture at a glance:** Python generates reproducible sample data, Snowflake stores raw sources, dbt Cloud builds and tests the transformation layers, the dbt Semantic Layer governs business metrics, and Power BI Desktop consumes the production marts for a four-page portfolio dashboard. Airflow remains an optional orchestration layer.
 
 ## Repository Layout
 
@@ -39,7 +39,8 @@ dbt_snowflake/
 │   ├── architecture.svg
 │   ├── alerting.md
 │   ├── anomaly_detection.md
-│   └── semantic_layer.md
+│   ├── semantic_layer.md
+│   └── power_bi_dashboard.md
 ├── models/
 │   ├── staging/
 │   ├── intermediate/
@@ -64,7 +65,8 @@ flowchart LR
     C --> D[PROD_MARTS<br/>analytics-ready tables]
     B --> E[SNAPSHOTS<br/>SCD customer history]
     G[SNOWFLAKE.ACCOUNT_USAGE] --> H[PROD_MONITORING<br/>cost & query telemetry]
-    D --> F[BI / Reporting / Analysis]
+    D --> F[Power BI Desktop<br/>4-page dashboard]
+    D --> I[dbt Semantic Layer<br/>MetricFlow]
 ```
 
 ### Snowflake production schemas
@@ -85,6 +87,7 @@ Development is isolated from production through dbt development schemas, while s
 
 - **Snowflake** — cloud data warehouse
 - **dbt Cloud** — transformation, testing, documentation, lineage, and production job execution
+- **Power BI Desktop** — portfolio dashboard and interactive reporting on the production marts
 - **Apache Airflow** — optional Python orchestration layer that can trigger the dbt Cloud production job
 - **GitHub** — version control and deployment workflow
 - **Python + Faker** — synthetic source-data generation and Airflow DAGs
@@ -110,7 +113,8 @@ A reviewer can understand or reproduce the project in a few steps:
    dbt source freshness
    dbt build
    ```
-7. **Optional Airflow orchestration:** install `airflow/requirements.txt`, configure the `snowflake_northwind` and `dbt_cloud_default` Airflow connections, and deploy `airflow/dags/northwind_marketing_pipeline.py`.
+7. **Review the Power BI dashboard design** in [`docs/power_bi_dashboard.md`](docs/power_bi_dashboard.md). The local `.pbix` is intentionally not committed because Import mode can cache source data.
+8. **Optional Airflow orchestration:** install `airflow/requirements.txt`, configure the `snowflake_northwind` and `dbt_cloud_default` Airflow connections, and deploy `airflow/dags/northwind_marketing_pipeline.py`.
 
 For a quick code review, start with `models/staging/`, then `models/intermediate/`, `models/marts/`, `tests/`, and finally the Airflow DAG.
 
@@ -144,11 +148,11 @@ models/
 │   └── int_customer_touchpoints.sql
 ├── marts/
 │   ├── _marts.yml
-    ├── _time_spine.yml
-    ├── time_spine_daily.sql
-    ├── fct_ad_spend.sql
-    ├── mart_channel_performance.sql
-    ├── mart_customer_ltv.sql
+│   ├── _time_spine.yml
+│   ├── time_spine_daily.sql
+│   ├── fct_ad_spend.sql
+│   ├── mart_channel_performance.sql
+│   ├── mart_customer_ltv.sql
 │   └── mart_funnel.sql
 └── monitoring/
     ├── _monitoring_sources.yml
@@ -542,6 +546,34 @@ This project has now been validated successfully end to end: `dbt sl validate` p
 
 Full setup, key-pair instructions, service-token setup, troubleshooting, and validation are documented in [`docs/semantic_layer.md`](docs/semantic_layer.md).
 
+## Power BI Dashboard
+
+The project includes a completed **Power BI Desktop** portfolio dashboard built on the Snowflake production marts.
+
+The report contains four pages:
+
+```text
+Executive Summary
+Marketing Attribution
+Funnel Analysis
+Customer LTV
+```
+
+Power BI connects to:
+
+```text
+NORTHWIND.PROD_MARTS.MART_CHANNEL_PERFORMANCE
+NORTHWIND.PROD_MARTS.MART_FUNNEL
+NORTHWIND.PROD_MARTS.MART_CUSTOMER_LTV
+NORTHWIND.PROD_MARTS.FCT_AD_SPEND
+```
+
+The report includes KPI cards, channel and date slicers, revenue-versus-spend analysis, linear-attribution views, funnel conversion analysis, and 90-day LTV/cohort reporting.
+
+The report is currently maintained in **Power BI Desktop**. It is not published to Power BI Service because the available Microsoft account does not provide an organizational Power BI tenant. The local `.pbix` is intentionally excluded from Git because Import mode can contain cached source data.
+
+Full dashboard design, source mapping, measures, validation, and export instructions are documented in [`docs/power_bi_dashboard.md`](docs/power_bi_dashboard.md).
+
 ## Marketing Attribution
 
 The attribution model is configurable through dbt variables:
@@ -587,7 +619,7 @@ The project includes:
 - reconciliation testing
 - dbt build validation
 
-The project currently includes 10 models, 5 sources, 1 snapshot, 16 data tests, and 1 exposure.
+The project includes staging, intermediate, mart, monitoring, time-spine, snapshot, custom-test, Semantic Layer, and dashboard-exposure resources. Counts are intentionally not hard-coded here so the README does not become stale as the project evolves.
 
 A custom test verifies that modeled advertising spend reconciles with source spend.
 
@@ -787,7 +819,7 @@ This project supports questions such as:
 2. How does ad spend compare with attributed revenue by channel?
 3. Where do customers drop out of the marketing funnel?
 4. What is 90-day customer lifetime value by acquisition channel and cohort?
-5. How do first-touch, last-touch, and linear attribution change channel performance?
+5. How does channel performance change when the configurable attribution model is switched between first-touch, last-touch, and linear?
 
 ## CI/CD — How This Repository Deploys Changes
 
@@ -960,6 +992,7 @@ Snowflake PROD_* schemas
 - Incremental event processing with late-arrival lookback
 - Snowflake warehouse credit and query-performance monitoring
 - Alert-ready production job design with a safe notification test macro
+- Four-page Power BI Desktop dashboard over Snowflake production marts
 
 ## Implemented Enhancements
 
@@ -973,10 +1006,11 @@ The following improvements were originally planned as future work and are now im
 - **Production failure and freshness alerting workflow** — the repository includes dbt Cloud alerting guidance plus a guarded `simulate_alert_failure` macro for safely testing failed-run notifications without modifying Snowflake data. The failure path is implemented; external email delivery is being validated in dbt Cloud.
 - **Marketing anomaly detection** — rolling channel-level z-score monitoring flags unusual daily spend, attributed revenue, and conversion-rate movements, with warning-level dbt tests.
 - **dbt Semantic Layer metrics** — centrally defines attributed revenue, ad spend, ROAS, CAC, conversion rate, and 90-day LTV so downstream tools reuse the same business logic. The Production environment is configured as the Semantic Layer deployment, and `dbt sl validate`, metric listing, and metric queries have been validated successfully.
+- **Power BI Desktop dashboard** — four portfolio pages cover executive KPIs, marketing attribution, funnel performance, and customer LTV/cohorts using the Snowflake `PROD_MARTS` layer.
 
 ## Future Improvements
 
 The next realistic extensions are:
 
 - **Run the included Airflow DAG in a local or self-hosted Apache Airflow environment** and, if it becomes the production scheduler, disable the dbt Cloud schedule to avoid duplicate runs.
-- **Expose analytics marts to Looker or another BI tool** and build portfolio dashboards for channel performance, attribution, funnel analysis, and customer LTV.
+- **Optionally publish the Power BI Desktop report to Power BI Service** when access to a work/school Microsoft tenant is available.

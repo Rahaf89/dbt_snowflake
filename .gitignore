@@ -31,3 +31,6 @@ airflow/logs/
 airflow/airflow.db
 airflow/airflow.cfg
 airflow/webserver_config.py
+
+# Power BI Desktop local report binaries
+*.pbix
