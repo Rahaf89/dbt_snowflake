@@ -40,6 +40,7 @@ dbt_snowflake/
 │   ├── alerting.md
 │   ├── anomaly_detection.md
 │   ├── semantic_layer.md
+│   ├── business_requirements.md
 │   └── power_bi_dashboard.md
 ├── models/
 │   ├── staging/
@@ -55,6 +56,49 @@ dbt_snowflake/
 ```
 
 The repository keeps the Snowflake infrastructure/setup scripts and the dbt transformation project together so the full pipeline is version-controlled in one place.
+
+## Business Problem & Requirements
+
+This project is designed as a **requirements-driven analytics delivery**, not just a dashboard exercise.
+
+The simulated client scenario starts with a marketing organization that has customer, order, web-event, Google Ads, and Meta Ads data but cannot reliably answer core questions about channel performance, attribution, funnel conversion, customer value, and marketing efficiency.
+
+The requirements were translated into explicit deliverables:
+
+| Business requirement | Delivered solution |
+|---|---|
+| Executive view of revenue, spend, ROAS, CAC, orders, and new customers | `MART_CHANNEL_PERFORMANCE` + Executive Summary |
+| Configurable first-touch / last-touch / linear attribution | attribution intermediate models + Marketing Attribution page |
+| Funnel analysis from session → add-to-cart → purchase | `MART_FUNNEL` + Funnel Analysis |
+| 90-day customer value by cohort and acquisition channel | `MART_CUSTOMER_LTV` + Customer LTV page |
+| Consistent KPI definitions | dbt Semantic Layer / MetricFlow |
+| Trusted, production-ready data | dbt tests, freshness, snapshots, monitoring, CI/CD |
+| Scalable event processing | incremental `STG_WEB_EVENTS` |
+| Secure production deployment | Snowflake roles, RSA key-pair auth, dbt Cloud deployment |
+
+The complete stakeholder brief, business questions, requirements, acceptance criteria, scope decisions, and requirement-to-deliverable traceability are documented in:
+
+**[Business Problem & Requirements](docs/business_requirements.md)**
+
+This creates the full portfolio story:
+
+```text
+client/business problem
+        ↓
+requirements gathering
+        ↓
+metric + data definitions
+        ↓
+Snowflake + dbt implementation
+        ↓
+testing / monitoring / deployment
+        ↓
+Semantic Layer
+        ↓
+Power BI dashboard
+        ↓
+business validation
+```
 
 ## Architecture
 
@@ -97,24 +141,25 @@ Development is isolated from production through dbt development schemas, while s
 
 A reviewer can understand or reproduce the project in a few steps:
 
-1. **Review the architecture** in `docs/architecture.svg`.
-2. **Create the Snowflake environment** with `snowflake/01_setup.sql` and `snowflake/02_raw_tables.sql`.
-3. **Generate sample source data**:
+1. **Start with the business problem and requirements** in [`docs/business_requirements.md`](docs/business_requirements.md).
+2. **Review the architecture** in `docs/architecture.svg`.
+3. **Create the Snowflake environment** with `snowflake/01_setup.sql` and `snowflake/02_raw_tables.sql`.
+4. **Generate sample source data**:
    ```bash
    cd ingestion
    pip install -r requirements.txt
    python generate_data.py --out ../raw_data
    ```
-4. **Load the five CSV files** from `raw_data/` into the matching tables in `NORTHWIND.RAW`. The exact Snowsight steps, table mapping, and verification queries are documented in [`snowflake/README.md`](snowflake/README.md).
-5. **Configure dbt Cloud** with database `NORTHWIND`, warehouse `TRANSFORM_WH_XS`, role `TRANSFORMER`, and key-pair authentication.
-6. **Build and test the dbt project**:
+5. **Load the five CSV files** from `raw_data/` into the matching tables in `NORTHWIND.RAW`. The exact Snowsight steps, table mapping, and verification queries are documented in [`snowflake/README.md`](snowflake/README.md).
+6. **Configure dbt Cloud** with database `NORTHWIND`, warehouse `TRANSFORM_WH_XS`, role `TRANSFORMER`, and key-pair authentication.
+7. **Build and test the dbt project**:
    ```bash
    dbt deps
    dbt source freshness
    dbt build
    ```
-7. **Review the Power BI dashboard** in [`docs/power_bi_dashboard.md`](docs/power_bi_dashboard.md), including screenshots, the PDF export, and the versioned `.pbix` portfolio artifact.
-8. **Optional Airflow orchestration:** install `airflow/requirements.txt`, configure the `snowflake_northwind` and `dbt_cloud_default` Airflow connections, and deploy `airflow/dags/northwind_marketing_pipeline.py`.
+8. **Review the Power BI dashboard** in [`docs/power_bi_dashboard.md`](docs/power_bi_dashboard.md), including screenshots, the PDF export, and the versioned `.pbix` portfolio artifact.
+9. **Optional Airflow orchestration:** install `airflow/requirements.txt`, configure the `snowflake_northwind` and `dbt_cloud_default` Airflow connections, and deploy `airflow/dags/northwind_marketing_pipeline.py`.
 
 For a quick code review, start with `models/staging/`, then `models/intermediate/`, `models/marts/`, `tests/`, and finally the Airflow DAG.
 
