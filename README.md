@@ -104,6 +104,8 @@ business validation
 
 ```mermaid
 flowchart LR
+    R[Business problem<br/>stakeholder requirements] -. drives .-> C
+    R -. validates .-> F
     A[RAW<br/>Snowflake source tables] --> B[PROD_STAGING<br/>cleaned & standardized views]
     B --> C[PROD_INTERMEDIATE<br/>business logic & attribution views]
     C --> D[PROD_MARTS<br/>analytics-ready tables]
