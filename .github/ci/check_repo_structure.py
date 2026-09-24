@@ -29,6 +29,7 @@ REQUIRED_PATHS = [
     "docs/anomaly_detection.md",
     "docs/semantic_layer.md",
     "docs/power_bi_dashboard.md",
+    "docs/business_requirements.md",
     "snapshots/scd_customers.sql",
     "tests/assert_spend_reconciles_to_source.sql",
 ]
