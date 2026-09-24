@@ -113,7 +113,7 @@ A reviewer can understand or reproduce the project in a few steps:
    dbt source freshness
    dbt build
    ```
-7. **Review the Power BI dashboard design** in [`docs/power_bi_dashboard.md`](docs/power_bi_dashboard.md). The local `.pbix` is intentionally not committed because Import mode can cache source data.
+7. **Review the Power BI dashboard** in [`docs/power_bi_dashboard.md`](docs/power_bi_dashboard.md), including screenshots, the PDF export, and the versioned `.pbix` portfolio artifact.
 8. **Optional Airflow orchestration:** install `airflow/requirements.txt`, configure the `snowflake_northwind` and `dbt_cloud_default` Airflow connections, and deploy `airflow/dags/northwind_marketing_pipeline.py`.
 
 For a quick code review, start with `models/staging/`, then `models/intermediate/`, `models/marts/`, `tests/`, and finally the Airflow DAG.
@@ -570,9 +570,17 @@ NORTHWIND.PROD_MARTS.FCT_AD_SPEND
 
 The report includes KPI cards, channel and date slicers, revenue-versus-spend analysis, linear-attribution views, funnel conversion analysis, and 90-day LTV/cohort reporting.
 
-The report is currently maintained in **Power BI Desktop**. It is not published to Power BI Service because the available Microsoft account does not provide an organizational Power BI tenant. The local `.pbix` is intentionally excluded from Git because Import mode can contain cached source data.
+The report is currently maintained in **Power BI Desktop**. It is not published to Power BI Service because the available Microsoft account does not provide an organizational Power BI tenant.
 
-Full dashboard design, source mapping, measures, validation, and export instructions are documented in [`docs/power_bi_dashboard.md`](docs/power_bi_dashboard.md).
+Portfolio artifacts are stored under `docs/power_bi/`:
+
+- [Power BI report (.pbix)](docs/power_bi/Northwind_Marketing_Analytics.pbix)
+- [PDF dashboard export](docs/power_bi/Northwind_Marketing_Analytics.pdf)
+- dashboard screenshots for all four report pages
+
+![Executive Summary](docs/power_bi/executive_summary.jpg)
+
+Full dashboard design, source mapping, measures, screenshots, validation, and artifact notes are documented in [`docs/power_bi_dashboard.md`](docs/power_bi_dashboard.md).
 
 ## Marketing Attribution
 
