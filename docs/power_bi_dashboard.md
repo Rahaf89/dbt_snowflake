@@ -23,7 +23,7 @@ docs/power_bi/
 Downloads:
 
 - [Power BI Desktop report (.pbix)](Northwind_Marketing_Analytics%20-%20Copy.pbix)
-- [PDF dashboard export](Northwind_Marketing_Analytics%20-%20pdf.pdf)
+- [PDF dashboard export](Northwind_Marketing_Analytics-pdf.pdf)
 
 ### Executive Summary
 
