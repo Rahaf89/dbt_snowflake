@@ -148,11 +148,11 @@ models/
 │   └── int_customer_touchpoints.sql
 ├── marts/
 │   ├── _marts.yml
-    ├── _time_spine.yml
-    ├── time_spine_daily.sql
-    ├── fct_ad_spend.sql
-    ├── mart_channel_performance.sql
-    ├── mart_customer_ltv.sql
+│   ├── _time_spine.yml
+│   ├── time_spine_daily.sql
+│   ├── fct_ad_spend.sql
+│   ├── mart_channel_performance.sql
+│   ├── mart_customer_ltv.sql
 │   └── mart_funnel.sql
 └── monitoring/
     ├── _monitoring_sources.yml
@@ -619,7 +619,7 @@ The project includes:
 - reconciliation testing
 - dbt build validation
 
-The project currently includes 10 models, 5 sources, 1 snapshot, 16 data tests, and 1 exposure.
+The project includes staging, intermediate, mart, monitoring, time-spine, snapshot, custom-test, Semantic Layer, and dashboard-exposure resources. Counts are intentionally not hard-coded here so the README does not become stale as the project evolves.
 
 A custom test verifies that modeled advertising spend reconciles with source spend.
 
@@ -819,7 +819,7 @@ This project supports questions such as:
 2. How does ad spend compare with attributed revenue by channel?
 3. Where do customers drop out of the marketing funnel?
 4. What is 90-day customer lifetime value by acquisition channel and cohort?
-5. How do first-touch, last-touch, and linear attribution change channel performance?
+5. How does channel performance change when the configurable attribution model is switched between first-touch, last-touch, and linear?
 
 ## CI/CD — How This Repository Deploys Changes
 
