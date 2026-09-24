@@ -148,14 +148,17 @@ exposures:
   - name: northwind_marketing_dashboard
     type: dashboard
     maturity: medium
-    url: "{{ var('dashboard_url', 'REPLACE_WITH_LOOKER_STUDIO_URL') }}"
     description: >
-      Looker Studio report covering the 4 pages defined in
-      docs/01_requirements.md: executive summary, attribution comparison,
-      funnel, and customer LTV & cohorts.
+      Power BI Desktop portfolio dashboard with four report pages:
+      Executive Summary, Marketing Attribution, Funnel Analysis, and
+      Customer LTV. The report consumes Snowflake production marts and
+      is maintained locally in Power BI Desktop; no public Power BI
+      Service URL is configured because an organizational tenant is not
+      available for publishing.
     depends_on:
       - ref('mart_channel_performance')
       - ref('mart_funnel')
+      - ref('mart_customer_ltv')
       - ref('fct_ad_spend')
     owner:
       name: "Raf"
