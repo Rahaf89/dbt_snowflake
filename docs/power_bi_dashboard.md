@@ -22,24 +22,24 @@ docs/power_bi/
 
 Downloads:
 
-- [Power BI Desktop report (.pbix)](docs/Northwind_Marketing_Analytics%20-%20Copy.pbix)
-- [PDF dashboard export](power_bi/Northwind_Marketing_Analytics.pdf)
+- [Power BI Desktop report (.pbix)](Northwind_Marketing_Analytics%20-%20Copy.pbix)
+- [PDF dashboard export](Northwind_Marketing_Analytics%20-%20pdf.pdf)
 
 ### Executive Summary
 
-![Executive Summary](power_bi/executive_summary.jpg)
+![Executive Summary](Summary.png)
 
 ### Marketing Attribution
 
-![Marketing Attribution](power_bi/marketing_attribution.jpg)
+![Marketing Attribution](Marketing.png)
 
 ### Funnel Analysis
 
-![Funnel Analysis](power_bi/funnel_analysis.jpg)
+![Funnel Analysis](Funnel.png)
 
 ### Customer LTV & Cohorts
 
-![Customer LTV](power_bi/customer_ltv.jpg)
+![Customer LTV](Customer%20LTV.png)
 
 ## Data source
 
