@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1650" height="560" viewBox="0 0 1650 560" role="img" aria-labelledby="title desc">
   <title id="title">Northwind Marketing Analytics architecture</title>
-  <desc id="desc">dbt Cloud transforms Snowflake raw data through staging, intermediate, marts and snapshots; production marts feed Power BI Desktop and the dbt Semantic Layer, with Airflow available as an optional orchestrator.</desc>
+  <desc id="desc">Business requirements drive a dbt Cloud and Snowflake analytics solution from raw data through staging, intermediate, marts and snapshots; production marts feed Power BI Desktop and the dbt Semantic Layer, with Airflow available as an optional orchestrator.</desc>
   <defs>
     <style>
       .bg { fill:#0f172a; }
@@ -20,7 +20,7 @@
     </marker>
   </defs>
 
-  <rect class="bg" width="1400" height="560"/>
+  <rect class="bg" width="1650" height="560"/>
   <text class="title" x="48" y="54">Northwind Marketing Analytics — Production Architecture</text>
 
   <rect class="box" x="45" y="120" width="190" height="115"/>
@@ -54,6 +54,11 @@
   <text class="label" x="1217" y="128" text-anchor="middle">SNAPSHOTS</text>
   <text class="small" x="1217" y="156" text-anchor="middle">SCD customer history</text>
 
+  <rect class="accent" x="45" y="380" width="300" height="105"/>
+  <text class="label" x="195" y="418" text-anchor="middle">Business Requirements</text>
+  <text class="small" x="195" y="447" text-anchor="middle">stakeholder questions + KPIs</text>
+  <text class="small" x="195" y="470" text-anchor="middle">acceptance criteria + scope</text>
+
   <rect class="box" x="555" y="380" width="205" height="105"/>
   <text class="label" x="657" y="418" text-anchor="middle">Apache Airflow</text>
   <text class="small" x="657" y="447" text-anchor="middle">Python DAG</text>
@@ -80,6 +85,8 @@
   <path class="arrow" d="M930 185 L930 215"/>
   <path class="arrow" d="M1035 262 L1100 262"/>
   <path class="arrow" d="M1035 137 L1100 137"/>
+  <path class="dash" d="M345 432 L555 210"/>
+  <path class="dash" d="M345 447 L1100 432"/>
   <path class="dash" d="M657 380 L657 235"/>
   <path class="dash" d="M930 380 L715 235"/>
   <path class="arrow" d="M1217 310 L1217 380"/>
